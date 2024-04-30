@@ -1,8 +1,5 @@
 # SolXen Blockchain(Testnet) Load Testing Tool 压力测试程序
 
-The SolXen Blockchain (Testnet) Load Testing Program is a tool used to test the X1 network, which can simulate a large number of transactions and user behaviors to evaluate the performance and stability of the network. This document will guide you on how to use the X1 Blockchain load testing program. [X1 Blockchain(Testnet)压力测试程序是一个用于测试X1网络的工具，它可以模拟大量的交易和用户行为，以评估网络的性能和稳定性。本文档将指导您如何使用X1 Blockchain压力测试程序。]
-
- 
 
  
 ## 1. Configuration [配置]
