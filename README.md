@@ -2,7 +2,7 @@
 
 
  
-## 1. Configuration [配置]
+## 1. 配置
 
 
 ```shell
@@ -19,9 +19,9 @@ Sol:
 ```
  
 
-## 2. Start Running [运行]
+## 2. 运行
 
 ```shell
-make start 
+./solxen-tx 
 ```
  
