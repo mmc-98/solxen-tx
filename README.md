@@ -2,7 +2,7 @@
 
 
  
-## 1. 按需修改配置文件solxen-tx.yaml
+## 1. Configuration [配置]
 
 
 ```shell
@@ -22,6 +22,6 @@ Sol:
 ## 2. Start Running [运行]
 
 ```shell
-solxen-tx
+make start 
 ```
  
