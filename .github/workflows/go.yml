@@ -30,4 +30,4 @@ jobs:
           goversion: "https://dl.google.com/go/go1.21.4.linux-amd64.tar.gz"
           project_path: "./"
           binary_name: "solxen-tx"
-          extra_files: LICENSE README.md
+          extra_files:  ./etc/solxen-tx.yaml
