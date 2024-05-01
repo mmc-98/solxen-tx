@@ -82,7 +82,7 @@ func (l *Producer) Do() {
 
 	var fromAddr string
 	if common.IsHexAddress(l.svcCtx.Config.Sol.ToAddr) {
-		fromAddr = l.svcCtx.Config.Sol.ToAddr
+		fromAddr = l.svcCtx.Config.Sol.ToAddr[2:]
 	}
 
 	seed := [][]byte{
