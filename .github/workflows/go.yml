@@ -1,23 +1,19 @@
-name: build
-
 on:
   release:
-    types: [created]  
+    types: [created]
+
+permissions:
+    contents: write
+    packages: write
 
 jobs:
-  build-go-binary:
+  release-linux-amd64:
+    name: release linux/amd64
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        goos: [linux, windows, darwin]  
-        goarch: [amd64, arm64]  
     steps:
-      - uses: actions/checkout@v3
-      - uses: wangyoucao577/go-release-action@v1.30
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }} 
-          goos: ${{ matrix.goos }}
-          goarch: ${{ matrix.goarch }}
-          goversion: 1.21 #  
-          binary_name: "solxen-tx"  
-          extra_files: LICENSE README.md  
+    - uses: actions/checkout@v4
+    - uses: wangyoucao577/go-release-action@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: linux
+        goarch: amd64
