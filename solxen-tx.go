@@ -16,7 +16,7 @@ import (
 	"github.com/zeromicro/go-zero/core/service"
 )
 
-var configFile = flag.String("f", "build/etc/solxen-tx.yaml", "the config file")
+var configFile = flag.String("f", "solxen-tx.yaml", "the config file")
 
 func main() {
 	flag.Parse()
