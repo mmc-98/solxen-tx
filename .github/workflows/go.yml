@@ -1,10 +1,12 @@
+# .github/workflows/release.yaml
+
 on:
   release:
-    types: [created]
+    types: [ created ]
 
 permissions:
-    contents: write
-    packages: write
+  contents: write
+  packages: write
 
 jobs:
   releases-matrix:
@@ -12,17 +14,20 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # build and publish in parallel:  linux/amd64, linux/arm64, windows/amd64, darwin/amd64, darwin/arm64
-        goos: [linux, windows, darwin]
-        goarch: [amd64, arm64]
+        # build and publish in parallel: linux/386, linux/amd64, linux/arm64, windows/386, windows/amd64, darwin/amd64, darwin/arm64
+        goos: [ linux, windows, darwin ]
+        goarch: [amd64, arm64 ]
         exclude:
           - goarch: arm64
             goos: windows
     steps:
-    - uses: actions/checkout@v4
-    - uses: wangyoucao577/go-release-action@v1
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        goos: linux
-        goarch: amd64
-        goversion: "https://dl.google.com/go/go1.21.4.linux-amd64.tar.gz"
+      - uses: actions/checkout@v4
+      - uses: wangyoucao577/go-release-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          goos: ${{ matrix.goos }}
+          goarch: ${{ matrix.goarch }}
+          goversion: "https://dl.google.com/go/go1.21.4.linux-amd64.tar.gz"
+          project_path: "./cmd/solxen-tx"
+          binary_name: "solxen-tx"
+          extra_files: LICENSE README.md
