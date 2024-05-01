@@ -11,9 +11,6 @@ jobs:
       matrix:
         goos: [linux, windows, darwin]
         goarch: [amd64, arm64]
-#        exclude:
-#          - goarch: arm64
-#            goos: windows
     steps:
       - uses: actions/checkout@v3
       - uses: wangyoucao577/go-release-action@v1.30
@@ -21,6 +18,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
-          goversion: 1.18
+          goversion: 1.21
           binary_name: "sloxen-tx"
           extra_files: solxen-tx.yaml
