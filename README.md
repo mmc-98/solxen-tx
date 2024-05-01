@@ -1,4 +1,4 @@
-# SolXen Blockchain(Testnet) Load Testing Tool 压力测试程序
+# SolXen mint工具
 
 
  
