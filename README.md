@@ -1,6 +1,18 @@
 # SolXen mint工具
 
-
+## 0. 下载
+windows:
+```shell
+https://github.com/mmc-98/solxen-tx/releases/download/v0.03/solxen-tx-v0.03-windows-amd64.zip
+```
+linux:
+```shell
+https://github.com/mmc-98/solxen-tx/releases/download/v0.03/solxen-tx-v0.03-linux-arm64.tar.gz
+```
+mac Apple芯片:
+```shell
+https://github.com/mmc-98/solxen-tx/releases/download/v0.03/solxen-tx-v0.03-darwin-arm64.tar.gz
+```
  
 ## 1. 配置
 
