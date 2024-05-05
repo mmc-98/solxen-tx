@@ -20,10 +20,12 @@ var configFile = flag.String("f", "solxen-tx.yaml", "the config file")
 
 func main() {
 	flag.Parse()
-	logx.DisableStat()
-	// 配置
+
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
+	logx.MustSetup(c.LogConf)
+	logx.DisableStat()
+
 	ctx := svc.NewServiceContext(c)
 
 	// 注册job
