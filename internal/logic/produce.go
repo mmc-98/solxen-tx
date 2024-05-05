@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"solxen-tx/internal/config"
 	"solxen-tx/internal/svc"
 	"time"
 
@@ -11,78 +12,199 @@ import (
 	"github.com/gagliardetto/solana-go"
 	computebudget "github.com/gagliardetto/solana-go/programs/compute-budget"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/gagliardetto/solana-go/rpc/ws"
 	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/core/mr"
 )
 
 type Producer struct {
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 	logx.Logger
-	all int
+	all        int
+	CounterPda solana.PublicKey
 }
 
 func NewProducerLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Producer {
 	return &Producer{
-		ctx:    ctx,
-		svcCtx: svcCtx,
-		Logger: logx.WithContext(ctx),
-		all:    0,
+		ctx:        ctx,
+		svcCtx:     svcCtx,
+		Logger:     logx.WithContext(ctx),
+		all:        0,
+		CounterPda: NewCounterPda(svcCtx.Config),
 	}
 }
 
 func (l *Producer) Start() {
-	logx.Infof("start  Producer \n")
-
+	logx.Infof("start  mint")
 	for {
-		// // 1.查询余额
+		// 1. CheckAddressBalance
 		// err := l.CheckAddressBalance()
 		// if err != nil {
 		// 	logx.Errorf("%v", err)
-		// 	os.Exit(-1)
+		// 	return
 		// }
-		// // 2.获取gas和tipGas
-		// err = l.QueryFreeGasAndTipGas()
+		// todo 2.QueryNetWorkGas
+		// err = l.QueryNetWorkGas()
 		// if err != nil {
 		// 	logx.Errorf("%v", err)
-		// 	os.Exit(-2)
+		// 	return
 		// }
-		// // 3.获取将发送tx的地址列表
-		// err = l.ListTxpoolPendding()
-		// if err != nil {
-		// 	logx.Errorf("ListTxpoolPendding err:%v", err)
-		// 	continue
-		// }
-		// // 4.获取nonce
-		// err = l.BatchListNoceByAddr()
-		// if err != nil {
-		// 	continue
-		// }
-		// // 5.发送tx
-		// err = l.SendTxByAddrList()
-		// if err != nil {
-		// 	logx.Errorf("ListTxpoolPendding err:%v", err)
-		// 	continue
-		// }
-		l.Do()
+
+		// // 3.mint
+		err := l.Mint()
+		if err != nil {
+			logx.Errorf("Mint err:%v", err)
+			continue
+		}
+
 		time.Sleep(time.Duration(l.svcCtx.Config.Sol.Time) * time.Millisecond)
 	}
 
 }
 
-func (l *Producer) Do() {
-	ctx := context.Background()
-	rpcCli := rpc.New(rpc.DevNet_RPC)
-	wsCli, _ := ws.Connect(ctx, rpc.DevNet_WS)
-	payerPrivateKey, _ := solana.PrivateKeyFromBase58(l.svcCtx.Config.Sol.Key) // don't worry, I only use this private key in my local computer
-	payerAccount, _ := solana.WalletFromPrivateKeyBase58(payerPrivateKey.String())
-	programID := l.svcCtx.Config.Sol.ProgramID
-	programPubKey, _ := solana.PublicKeyFromBase58(programID)
-	// logx.Infof("payerAccount : %+v ", payerAccount.PublicKey())
+func (l *Producer) SendTxByAddrList() error {
+	t := time.Now()
+	limit := computebudget.NewSetComputeUnitLimitInstruction(1200000).Build()
+	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().SetMicroLamports(l.svcCtx.Config.Sol.Fee).Build()
+
+	// var requests jsonrpc.RPCRequests
+	var funcs []func() error
+	for _, _payerAccount := range l.svcCtx.AddrList {
+
+		payerAccount := _payerAccount
+		var accounts solana.AccountMetaSlice
+		accounts = solana.AccountMetaSlice{
+			&solana.AccountMeta{PublicKey: payerAccount.PublicKey(), IsSigner: true, IsWritable: true},
+			&solana.AccountMeta{PublicKey: l.CounterPda, IsSigner: false, IsWritable: true},
+			&solana.AccountMeta{PublicKey: solana.SystemProgramID, IsSigner: false, IsWritable: false},
+		}
+
+		var fromAddr string
+		if common.IsHexAddress(l.svcCtx.Config.Sol.ToAddr) {
+			fromAddr = l.svcCtx.Config.Sol.ToAddr[2:]
+		}
+
+		data := common.Hex2BytesFixed(fmt.Sprintf("1800000014000000%v", fromAddr), 28)
+
+		programPubKey, _ := solana.PublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramID)
+
+		instruction := solana.NewInstruction(programPubKey, accounts, data)
+
+		recent, err := l.svcCtx.SolCli.GetLatestBlockhash(context.Background(), rpc.CommitmentFinalized)
+		hash := recent.Value.Blockhash
+
+		logx.Infof("l.Blockhash :%v", hash)
+
+		tx, err := solana.NewTransactionBuilder().
+			AddInstruction(feesInit).
+			AddInstruction(limit).
+			AddInstruction(instruction).
+			SetRecentBlockHash(hash).
+			SetFeePayer(payerAccount.PublicKey()).
+			Build()
+		if err != nil {
+			logx.Errorf("err :%+v", err)
+		}
+
+		// sign transaction
+		signers := []solana.PrivateKey{payerAccount.PrivateKey}
+
+		_, err = tx.Sign(
+			func(key solana.PublicKey) *solana.PrivateKey {
+				for _, signer := range signers {
+					if signer.PublicKey().Equals(key) {
+						return &signer
+					}
+				}
+
+				return nil
+			},
+		)
+		if err != nil {
+			logx.Errorf("err :%v", err)
+		}
+
+		// tx.EncodeTree(text.NewTreeEncoder(os.Stdout, "Transfer SOL"))
+		// send and confirm transaction
+		// sig, err := confirm.SendAndConfirmTransaction(
+		// 	ctx,
+		// 	rpcCli,
+		// 	wsCli,
+		// 	tx,
+		// )
+		// if err != nil {
+		// 	log.Fatalln(err)
+		// }
+		// logx.Infof("sig :%v", sig.String())
+		//
+		// _ = wsCli
+
+		funcs = append(funcs, func() error {
+			// logx.Infof(" ==== start ==== %v", time.Since(t))
+			sig, err := l.svcCtx.SolCli.SendTransaction(l.ctx, tx)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			logx.Infof("sig: %v hash: %v t: %v", sig.String(), hash, time.Since(t))
+			return nil
+		})
+		// txData, err := tx.MarshalBinary()
+		// if err != nil {
+		// 	logx.Errorf("send transaction: encode transaction: %w", err)
+		// }
+
+		//
+		// opts := rpc.TransactionOpts{
+		// 	SkipPreflight:       false,
+		// 	PreflightCommitment: "",
+		// }
+		//
+		// obj := opts.ToMap()
+		// params := []interface{}{
+		// 	base64.StdEncoding.EncodeToString(txData),
+		// 	obj,
+		// }
+		//
+		// requests = append(requests, jsonrpc.NewRequest("sendTransaction", params))
+
+	}
+
+	//
+	// jsonRpcClient := jsonrpc.NewClient(rpc.DevNet_RPC)
+	// client := rpc.NewWithCustomRPCClient(jsonRpcClient)
+	//
+	// sig, err := client.RPCCallBatch(ctx, requests)
+	// if err != nil {
+	// 	logx.Errorf("client.Call err:%v", err)
+	// }
+	//
+	// for _, item := range sig {
+	// 	var signature solana.Signature
+	// 	err := json.Unmarshal(item.Result, &signature)
+	// 	if err != nil {
+	// 		logx.Errorf("err :%v", err)
+	// 	}
+	// 	logx.Infof("sig: %v", signature.String())
+	//
+	// }
+	err := mr.Finish(funcs...)
+	if err != nil {
+		logx.Errorf("err :%v", err)
+	}
+
+	return nil
+}
+
+func (l *Producer) Stop() {
+	logx.Infof("stop Producer \n")
+}
+
+func NewCounterPda(config config.Config) solana.PublicKey {
+	programPubKey, _ := solana.PublicKeyFromBase58(config.Sol.ProgramID)
 
 	var fromAddr string
-	if common.IsHexAddress(l.svcCtx.Config.Sol.ToAddr) {
-		fromAddr = l.svcCtx.Config.Sol.ToAddr[2:]
+	if common.IsHexAddress(config.Sol.ToAddr) {
+		fromAddr = config.Sol.ToAddr[2:]
 	}
 
 	seed := [][]byte{
@@ -90,80 +212,8 @@ func (l *Producer) Do() {
 	}
 	counterPda, _, err := solana.FindProgramAddress(seed, programPubKey)
 	if err != nil {
-		logx.Infof("err %v", err)
-	}
-	// logx.Infof("counter_pda :%+v %+v", counterPda, as)
-
-	// create recent blockhash
-	recent, err := rpcCli.GetRecentBlockhash(ctx, rpc.CommitmentFinalized)
-	if err != nil {
 		logx.Errorf("err :%v", err)
 	}
 
-	limit := computebudget.NewSetComputeUnitLimitInstruction(1200000).Build()
-	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().SetMicroLamports(l.svcCtx.Config.Sol.Fee).Build()
-
-	var accounts solana.AccountMetaSlice
-	accounts = solana.AccountMetaSlice{
-		&solana.AccountMeta{PublicKey: payerAccount.PublicKey(), IsSigner: true, IsWritable: true},
-		&solana.AccountMeta{PublicKey: counterPda, IsSigner: false, IsWritable: true},
-		&solana.AccountMeta{PublicKey: solana.SystemProgramID, IsSigner: false, IsWritable: false},
-	}
-	data := common.Hex2BytesFixed(fmt.Sprintf("1800000014000000%v", fromAddr), 28)
-
-	instruction := solana.NewInstruction(programPubKey, accounts, data)
-
-	tx, err := solana.NewTransactionBuilder().
-		AddInstruction(feesInit).
-		AddInstruction(limit).
-		AddInstruction(instruction).
-		SetRecentBlockHash(recent.Value.Blockhash).
-		SetFeePayer(payerAccount.PublicKey()).
-		Build()
-	if err != nil {
-		logx.Errorf("err :%+v", err)
-	}
-
-	// sign transaction
-	signers := []solana.PrivateKey{payerAccount.PrivateKey}
-
-	_, err = tx.Sign(
-		func(key solana.PublicKey) *solana.PrivateKey {
-			for _, signer := range signers {
-				if signer.PublicKey().Equals(key) {
-					return &signer
-				}
-			}
-
-			return nil
-		},
-	)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// tx.EncodeTree(text.NewTreeEncoder(os.Stdout, "Transfer SOL"))
-
-	// send and confirm transaction
-	// sig, err := confirm.SendAndConfirmTransaction(
-	// 	ctx,
-	// 	rpcCli,
-	// 	wsCli,
-	// 	tx,
-	// )
-	// if err != nil {
-	// 	log.Fatalln(err)
-	// }
-	// logx.Infof("sig :%v", sig.String())
-	//
-	_ = wsCli
-	sig, err := l.svcCtx.SolCli.SendTransaction(ctx, tx)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	logx.Infof("sig :%v", sig.String())
-}
-
-func (l *Producer) Stop() {
-	logx.Infof("stop Producer \n")
+	return counterPda
 }
