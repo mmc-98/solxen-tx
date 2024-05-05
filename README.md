@@ -7,7 +7,7 @@ https://github.com/mmc-98/solxen-tx/releases/download/v0.03/solxen-tx-v0.03-wind
 ```
 linux:
 ```shell
-https://github.com/mmc-98/solxen-tx/releases/download/v0.03/solxen-tx-v0.03-linux-arm64.tar.gz
+https://github.com/mmc-98/solxen-tx/releases/download/v0.03/solxen-tx-v0.03-linux-amd64.tar.gz
 ```
 mac Apple芯片:
 ```shell
