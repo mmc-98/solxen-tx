@@ -1,0 +1,13 @@
+#tmp
+tmp
+tmp/*
+
+
+solxen-tx
+*.bak
+logs/
+tests/
+etc/solxen-tx.default.yaml
+etc/solxen-tx.dev.yaml
+build/*
+.idea/*
