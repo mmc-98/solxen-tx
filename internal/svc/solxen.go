@@ -62,7 +62,7 @@ func (s *ServiceContext) GenKeyByWord() {
 			panic(err)
 		}
 		// address := wallet.PublicKey().String()
-
+		logx.Infof("account: %v", wallet.PublicKey())
 		s.AddrList = append(s.AddrList, wallet)
 	}
 
