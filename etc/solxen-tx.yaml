@@ -1,8 +1,10 @@
 # sol配置
 Name: solxen-tx
+LogConf:
+  Encoding: plain
 Sol:
   Url: "https://api.devnet.solana.com"                          # rpc地址
-  Key: ""                                                       # 私钥
+  Key: ""                                                       # 助记词
   Num: 1                                                        # 并发数
   Fee: 3000                                                     # 优先级费用
   ToAddr: "0x4A7766a5BD50DFAB5665d27eDfA25471b194E204"          # eth空投地址

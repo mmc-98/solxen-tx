@@ -1,5 +1,10 @@
 # SolXen mint工具
 
+## 特点
+```shell
+支持多线程并发模式 done
+支持获取优先级费用
+```
 ## 0. 下载
 windows:
 ```shell

@@ -48,8 +48,8 @@ func (l *Producer) GetglobalXnRecord() ([]byte, error) {
 }
 
 func (l *Producer) Mint() error {
-	t := time.Now()
 	var (
+		fns       []func() error
 		programId = solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramID)
 		seed      = [][]byte{[]byte("xn-global-counter")}
 	)
@@ -69,101 +69,114 @@ func (l *Producer) Mint() error {
 		return errorx.Wrap(err, "mintAccount")
 	}
 
-	associateTokenProgram := solana.MustPublicKeyFromBase58("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL")
-	user := solana.MustPrivateKeyFromBase58(l.svcCtx.Config.Sol.Key)
-	userTokenAccount, _, err := solana.FindAssociatedTokenAddress(
-		user.PublicKey(),
-		mint,
-	)
+	for _, _account := range l.svcCtx.AddrList {
+		account := _account
+		fns = append(fns, func() error {
+			t := time.Now()
+			associateTokenProgram := solana.MustPublicKeyFromBase58("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL")
+			// user := solana.MustPrivateKeyFromBase58(l.svcCtx.Config.Sol.Key)
+			userTokenAccount, _, err := solana.FindAssociatedTokenAddress(
+				account.PublicKey(),
+				mint,
+			)
 
-	var (
-		fromAddr string
-	)
-	if common.IsHexAddress(l.svcCtx.Config.Sol.ToAddr) {
-		fromAddr = l.svcCtx.Config.Sol.ToAddr[2:]
-	}
-	seed = [][]byte{[]byte("sol-xen"), common.FromHex(fromAddr), user.PublicKey().Bytes()}
-	userXnRecordAccount, _, err := solana.FindProgramAddress(seed, programId)
-	if err != nil {
-		return errorx.Wrap(err, "userXnRecordAccount")
-	}
-
-	var globalXnRecordNew sol_xen.GlobalXnRecord
-	seed = [][]byte{[]byte("sol-xen-addr"), common.FromHex(fromAddr)}
-	info, err := l.svcCtx.SolCli.GetAccountInfoWithOpts(l.ctx, globalXnRecordAddress, &rpc.GetAccountInfoOpts{
-		Commitment: rpc.CommitmentConfirmed})
-	err = bin.NewBinDecoder(info.GetBinary()).Decode(&globalXnRecordNew)
-	if err != nil {
-		return errorx.Wrap(err, "globalXnRecordNew")
-	}
-
-	ethAccount := common.HexToAddress(l.svcCtx.Config.Sol.ToAddr)
-	var uint8Array [20]uint8
-	copy(uint8Array[:], ethAccount[:])
-	eth := sol_xen.EthAccount{}
-	eth.Address = uint8Array
-
-	mintToken := sol_xen.NewMintTokensInstructionBuilder().
-		SetEthAccount(eth).
-		SetUserTokenAccountAccount(userTokenAccount).
-		SetGlobalXnRecordAccount(globalXnRecordAddress).
-		SetUserXnRecordAccount(userXnRecordAccount).
-		SetUserAccount(user.PublicKey()).
-		SetMintAccountAccount(mint).
-		SetTokenProgramAccount(solana.TokenProgramID).
-		SetSystemProgramAccount(solana.SystemProgramID).
-		SetAssociatedTokenProgramAccount(associateTokenProgram).
-		SetRentAccount(solana.SysVarRentPubkey).Build()
-
-	sol_xen.SetProgramID(solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramID))
-	data, _ := mintToken.Data()
-	instruction := solana.NewInstruction(mintToken.ProgramID(), mintToken.Accounts(), data)
-	signers := []solana.PrivateKey{user}
-
-	limit := computebudget.NewSetComputeUnitLimitInstruction(1400000).Build()
-	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().SetMicroLamports(l.svcCtx.Config.Sol.Fee).Build()
-
-	recent, err := l.svcCtx.SolCli.GetLatestBlockhash(context.Background(), rpc.CommitmentFinalized)
-	rent := recent.Value.Blockhash
-
-	tx, err := solana.NewTransactionBuilder().
-		AddInstruction(feesInit).
-		AddInstruction(limit).
-		AddInstruction(instruction).
-		SetRecentBlockHash(rent).
-		SetFeePayer(user.PublicKey()).
-		Build()
-	if err != nil {
-		return errorx.Wrap(err, "tx")
-	}
-
-	// tx.EncodeTree(text.NewTreeEncoder(os.Stdout, "Transfer SOL"))
-
-	_, err = tx.Sign(
-		func(key solana.PublicKey) *solana.PrivateKey {
-			for _, signer := range signers {
-				if signer.PublicKey().Equals(key) {
-					return &signer
-				}
+			var (
+				fromAddr string
+			)
+			if common.IsHexAddress(l.svcCtx.Config.Sol.ToAddr) {
+				fromAddr = l.svcCtx.Config.Sol.ToAddr[2:]
 			}
-			return nil
-		},
-	)
-	if err != nil {
-		return errorx.Wrap(err, "Sign")
-	}
+			seed = [][]byte{[]byte("sol-xen"), common.FromHex(fromAddr), account.PublicKey().Bytes()}
+			userXnRecordAccount, _, err := solana.FindProgramAddress(seed, programId)
+			if err != nil {
+				return errorx.Wrap(err, "userXnRecordAccount")
+			}
 
-	sig, err := l.svcCtx.SolCli.SendTransaction(context.TODO(), tx)
-	if err != nil {
-		return errorx.Wrap(err, "sig")
+			var globalXnRecordNew sol_xen.GlobalXnRecord
+			seed = [][]byte{[]byte("sol-xen-addr"), common.FromHex(fromAddr)}
+			info, err := l.svcCtx.SolCli.GetAccountInfoWithOpts(l.ctx, globalXnRecordAddress, &rpc.GetAccountInfoOpts{
+				Commitment: rpc.CommitmentConfirmed})
+			err = bin.NewBinDecoder(info.GetBinary()).Decode(&globalXnRecordNew)
+			if err != nil {
+				return errorx.Wrap(err, "globalXnRecordNew")
+			}
+
+			ethAccount := common.HexToAddress(l.svcCtx.Config.Sol.ToAddr)
+			var uint8Array [20]uint8
+			copy(uint8Array[:], ethAccount[:])
+			eth := sol_xen.EthAccount{}
+			eth.Address = uint8Array
+
+			mintToken := sol_xen.NewMintTokensInstructionBuilder().
+				SetEthAccount(eth).
+				SetUserTokenAccountAccount(userTokenAccount).
+				SetGlobalXnRecordAccount(globalXnRecordAddress).
+				SetUserXnRecordAccount(userXnRecordAccount).
+				SetUserAccount(account.PublicKey()).
+				SetMintAccountAccount(mint).
+				SetTokenProgramAccount(solana.TokenProgramID).
+				SetSystemProgramAccount(solana.SystemProgramID).
+				SetAssociatedTokenProgramAccount(associateTokenProgram).
+				SetRentAccount(solana.SysVarRentPubkey).Build()
+
+			sol_xen.SetProgramID(solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramID))
+			data, _ := mintToken.Data()
+			instruction := solana.NewInstruction(mintToken.ProgramID(), mintToken.Accounts(), data)
+			signers := []solana.PrivateKey{account.PrivateKey}
+
+			limit := computebudget.NewSetComputeUnitLimitInstruction(1400000).Build()
+			feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().SetMicroLamports(l.svcCtx.Config.Sol.Fee).Build()
+
+			recent, err := l.svcCtx.SolCli.GetLatestBlockhash(context.Background(), rpc.CommitmentFinalized)
+			rent := recent.Value.Blockhash
+
+			tx, err := solana.NewTransactionBuilder().
+				AddInstruction(feesInit).
+				AddInstruction(limit).
+				AddInstruction(instruction).
+				SetRecentBlockHash(rent).
+				SetFeePayer(account.PublicKey()).
+				Build()
+			if err != nil {
+				return errorx.Wrap(err, "tx")
+			}
+
+			// tx.EncodeTree(text.NewTreeEncoder(os.Stdout, "Transfer SOL"))
+
+			_, err = tx.Sign(
+				func(key solana.PublicKey) *solana.PrivateKey {
+					for _, signer := range signers {
+						if signer.PublicKey().Equals(key) {
+							return &signer
+						}
+					}
+					return nil
+				},
+			)
+			if err != nil {
+				return errorx.Wrap(err, "Sign")
+			}
+
+			sig, err := l.svcCtx.SolCli.SendTransaction(context.TODO(), tx)
+			if err != nil {
+				return errorx.Wrap(err, "sig")
+			}
+			userTokenBalance, err := l.svcCtx.SolCli.GetTokenAccountBalance(l.ctx, userTokenAccount, rpc.CommitmentConfirmed)
+			if err != nil {
+				return errorx.Wrap(err, "userTokenBalance")
+			}
+			logx.Infof("Tx: %v hashes: %v superhashes: %v balance: %v t: %v", sig.String(), globalXnRecordNew.Hashes,
+				globalXnRecordNew.Superhashes, userTokenBalance.Value.UiAmountString, time.Since(t))
+			return nil
+
+		})
 	}
-	userTokenBalance, err := l.svcCtx.SolCli.GetTokenAccountBalance(l.ctx, userTokenAccount, rpc.CommitmentConfirmed)
+	err = mr.Finish(fns...)
 	if err != nil {
-		return errorx.Wrap(err, "userTokenBalance")
+		logx.Errorf("err: %v", err)
 	}
-	logx.Infof("Tx: %v hashes: %v superhashes: %v balance: %v t: %v", sig.String(), globalXnRecordNew.Hashes,
-		globalXnRecordNew.Superhashes, userTokenBalance.Value.UiAmountString, time.Since(t))
 	return nil
+
 }
 
 func (l *Producer) FindProgramAddressSync(seeds [][]byte, programId solana.PublicKey) (solana.PublicKey, error) {

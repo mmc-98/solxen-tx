@@ -9,12 +9,11 @@ import (
 )
 
 type ServiceContext struct {
-	Config     config.Config
-	Lock       sync.RWMutex
-	AddressKey map[solana.PublicKey]solana.PrivateKey
-	AddrList   []*solana.Wallet
-	SolCli     *rpc.Client
-	Blockhash  chan solana.Hash
+	Config    config.Config
+	Lock      sync.RWMutex
+	AddrList  []*solana.Wallet
+	SolCli    *rpc.Client
+	Blockhash chan solana.Hash
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -25,5 +24,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		SolCli:    rpc.New(c.Sol.Url),
 		Blockhash: make(chan solana.Hash, 10),
 	}
+	s.GenKeyByWord()
 	return s
 }
