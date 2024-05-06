@@ -165,8 +165,8 @@ func (l *Producer) Mint() error {
 			if err != nil {
 				return errorx.Wrap(err, "userTokenBalance")
 			}
-			logx.Infof("Tx: %v hashes: %v superhashes: %v balance: %v t: %v", sig.String(), globalXnRecordNew.Hashes,
-				globalXnRecordNew.Superhashes, userTokenBalance.Value.UiAmountString, time.Since(t))
+			logx.Infof("Tx: %v hashes: %v superhashes: %v account: %v balance: %v t: %v", sig.String(), globalXnRecordNew.Hashes,
+				globalXnRecordNew.Superhashes, account.PublicKey(), userTokenBalance.Value.UiAmountString, time.Since(t))
 			return nil
 
 		})
