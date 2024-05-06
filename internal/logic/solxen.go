@@ -157,7 +157,7 @@ func (l *Producer) Mint() error {
 				return errorx.Wrap(err, "Sign")
 			}
 
-			sig, err := l.svcCtx.SolCli.SendTransaction(context.TODO(), tx)
+			_, err = l.svcCtx.SolCli.SendTransaction(context.TODO(), tx)
 			if err != nil {
 				return errorx.Wrap(err, "sig")
 			}
@@ -165,8 +165,8 @@ func (l *Producer) Mint() error {
 			if err != nil {
 				return errorx.Wrap(err, "userTokenBalance")
 			}
-			logx.Infof("account: %v hashes: %v superhashes: %v  balance: %v t: %v", sig.String(), account.PublicKey(),
-				globalXnRecordNew.Superhashes, userTokenBalance.Value.UiAmountString, time.Since(t))
+			logx.Infof("account: %v hashes: %v superhashes: %v  balance: %v t: %v", account.PublicKey(),
+				globalXnRecordNew.Hashes, globalXnRecordNew.Superhashes, userTokenBalance.Value.UiAmountString, time.Since(t))
 			return nil
 
 		})
