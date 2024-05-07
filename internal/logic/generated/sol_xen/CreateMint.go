@@ -12,6 +12,7 @@ import (
 
 // CreateMint is the `createMint` instruction.
 type CreateMint struct {
+	Metadata *InitTokenParams
 
 	// [0] = [WRITE, SIGNER] admin
 	//
@@ -19,20 +20,30 @@ type CreateMint struct {
 	//
 	// [2] = [WRITE] mintAccount
 	//
-	// [3] = [] tokenProgram
+	// [3] = [WRITE] metadata
 	//
-	// [4] = [] systemProgram
+	// [4] = [] tokenProgram
 	//
-	// [5] = [] rent
+	// [5] = [] tokenMetadataProgram
+	//
+	// [6] = [] systemProgram
+	//
+	// [7] = [] rent
 	ag_solanago.AccountMetaSlice `bin:"-"`
 }
 
 // NewCreateMintInstructionBuilder creates a new `CreateMint` instruction builder.
 func NewCreateMintInstructionBuilder() *CreateMint {
 	nd := &CreateMint{
-		AccountMetaSlice: make(ag_solanago.AccountMetaSlice, 6),
+		AccountMetaSlice: make(ag_solanago.AccountMetaSlice, 8),
 	}
 	return nd
+}
+
+// SetMetadata sets the "metadata" parameter.
+func (inst *CreateMint) SetMetadata(metadata InitTokenParams) *CreateMint {
+	inst.Metadata = &metadata
+	return inst
 }
 
 // SetAdminAccount sets the "admin" account.
@@ -68,37 +79,59 @@ func (inst *CreateMint) GetMintAccountAccount() *ag_solanago.AccountMeta {
 	return inst.AccountMetaSlice.Get(2)
 }
 
+// SetMetadataAccount sets the "metadata" account.
+func (inst *CreateMint) SetMetadataAccount(metadata ag_solanago.PublicKey) *CreateMint {
+	inst.AccountMetaSlice[3] = ag_solanago.Meta(metadata).WRITE()
+	return inst
+}
+
+// GetMetadataAccount gets the "metadata" account.
+func (inst *CreateMint) GetMetadataAccount() *ag_solanago.AccountMeta {
+	return inst.AccountMetaSlice.Get(3)
+}
+
 // SetTokenProgramAccount sets the "tokenProgram" account.
 func (inst *CreateMint) SetTokenProgramAccount(tokenProgram ag_solanago.PublicKey) *CreateMint {
-	inst.AccountMetaSlice[3] = ag_solanago.Meta(tokenProgram)
+	inst.AccountMetaSlice[4] = ag_solanago.Meta(tokenProgram)
 	return inst
 }
 
 // GetTokenProgramAccount gets the "tokenProgram" account.
 func (inst *CreateMint) GetTokenProgramAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(3)
+	return inst.AccountMetaSlice.Get(4)
+}
+
+// SetTokenMetadataProgramAccount sets the "tokenMetadataProgram" account.
+func (inst *CreateMint) SetTokenMetadataProgramAccount(tokenMetadataProgram ag_solanago.PublicKey) *CreateMint {
+	inst.AccountMetaSlice[5] = ag_solanago.Meta(tokenMetadataProgram)
+	return inst
+}
+
+// GetTokenMetadataProgramAccount gets the "tokenMetadataProgram" account.
+func (inst *CreateMint) GetTokenMetadataProgramAccount() *ag_solanago.AccountMeta {
+	return inst.AccountMetaSlice.Get(5)
 }
 
 // SetSystemProgramAccount sets the "systemProgram" account.
 func (inst *CreateMint) SetSystemProgramAccount(systemProgram ag_solanago.PublicKey) *CreateMint {
-	inst.AccountMetaSlice[4] = ag_solanago.Meta(systemProgram)
+	inst.AccountMetaSlice[6] = ag_solanago.Meta(systemProgram)
 	return inst
 }
 
 // GetSystemProgramAccount gets the "systemProgram" account.
 func (inst *CreateMint) GetSystemProgramAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(4)
+	return inst.AccountMetaSlice.Get(6)
 }
 
 // SetRentAccount sets the "rent" account.
 func (inst *CreateMint) SetRentAccount(rent ag_solanago.PublicKey) *CreateMint {
-	inst.AccountMetaSlice[5] = ag_solanago.Meta(rent)
+	inst.AccountMetaSlice[7] = ag_solanago.Meta(rent)
 	return inst
 }
 
 // GetRentAccount gets the "rent" account.
 func (inst *CreateMint) GetRentAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(5)
+	return inst.AccountMetaSlice.Get(7)
 }
 
 func (inst CreateMint) Build() *Instruction {
@@ -119,6 +152,13 @@ func (inst CreateMint) ValidateAndBuild() (*Instruction, error) {
 }
 
 func (inst *CreateMint) Validate() error {
+	// Check whether all (required) parameters are set:
+	{
+		if inst.Metadata == nil {
+			return errors.New("Metadata parameter is not set")
+		}
+	}
+
 	// Check whether all (required) accounts are set:
 	{
 		if inst.AccountMetaSlice[0] == nil {
@@ -131,12 +171,18 @@ func (inst *CreateMint) Validate() error {
 			return errors.New("accounts.MintAccount is not set")
 		}
 		if inst.AccountMetaSlice[3] == nil {
-			return errors.New("accounts.TokenProgram is not set")
+			return errors.New("accounts.Metadata is not set")
 		}
 		if inst.AccountMetaSlice[4] == nil {
-			return errors.New("accounts.SystemProgram is not set")
+			return errors.New("accounts.TokenProgram is not set")
 		}
 		if inst.AccountMetaSlice[5] == nil {
+			return errors.New("accounts.TokenMetadataProgram is not set")
+		}
+		if inst.AccountMetaSlice[6] == nil {
+			return errors.New("accounts.SystemProgram is not set")
+		}
+		if inst.AccountMetaSlice[7] == nil {
 			return errors.New("accounts.Rent is not set")
 		}
 	}
@@ -152,42 +198,63 @@ func (inst *CreateMint) EncodeToTree(parent ag_treeout.Branches) {
 				ParentFunc(func(instructionBranch ag_treeout.Branches) {
 
 					// Parameters of the instruction:
-					instructionBranch.Child("Params[len=0]").ParentFunc(func(paramsBranch ag_treeout.Branches) {})
+					instructionBranch.Child("Params[len=1]").ParentFunc(func(paramsBranch ag_treeout.Branches) {
+						paramsBranch.Child(ag_format.Param("Metadata", *inst.Metadata))
+					})
 
 					// Accounts of the instruction:
-					instructionBranch.Child("Accounts[len=6]").ParentFunc(func(accountsBranch ag_treeout.Branches) {
-						accountsBranch.Child(ag_format.Meta("         admin", inst.AccountMetaSlice.Get(0)))
-						accountsBranch.Child(ag_format.Meta("globalXnRecord", inst.AccountMetaSlice.Get(1)))
-						accountsBranch.Child(ag_format.Meta("          mint", inst.AccountMetaSlice.Get(2)))
-						accountsBranch.Child(ag_format.Meta("  tokenProgram", inst.AccountMetaSlice.Get(3)))
-						accountsBranch.Child(ag_format.Meta(" systemProgram", inst.AccountMetaSlice.Get(4)))
-						accountsBranch.Child(ag_format.Meta("          rent", inst.AccountMetaSlice.Get(5)))
+					instructionBranch.Child("Accounts[len=8]").ParentFunc(func(accountsBranch ag_treeout.Branches) {
+						accountsBranch.Child(ag_format.Meta("               admin", inst.AccountMetaSlice.Get(0)))
+						accountsBranch.Child(ag_format.Meta("      globalXnRecord", inst.AccountMetaSlice.Get(1)))
+						accountsBranch.Child(ag_format.Meta("                mint", inst.AccountMetaSlice.Get(2)))
+						accountsBranch.Child(ag_format.Meta("            metadata", inst.AccountMetaSlice.Get(3)))
+						accountsBranch.Child(ag_format.Meta("        tokenProgram", inst.AccountMetaSlice.Get(4)))
+						accountsBranch.Child(ag_format.Meta("tokenMetadataProgram", inst.AccountMetaSlice.Get(5)))
+						accountsBranch.Child(ag_format.Meta("       systemProgram", inst.AccountMetaSlice.Get(6)))
+						accountsBranch.Child(ag_format.Meta("                rent", inst.AccountMetaSlice.Get(7)))
 					})
 				})
 		})
 }
 
 func (obj CreateMint) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
+	// Serialize `Metadata` param:
+	err = encoder.Encode(obj.Metadata)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 func (obj *CreateMint) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
+	// Deserialize `Metadata`:
+	err = decoder.Decode(&obj.Metadata)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 // NewCreateMintInstruction declares a new CreateMint instruction with the provided parameters and accounts.
 func NewCreateMintInstruction(
+	// Parameters:
+	metadata InitTokenParams,
 	// Accounts:
 	admin ag_solanago.PublicKey,
 	globalXnRecord ag_solanago.PublicKey,
 	mintAccount ag_solanago.PublicKey,
+	metadataAccount ag_solanago.PublicKey,
 	tokenProgram ag_solanago.PublicKey,
+	tokenMetadataProgram ag_solanago.PublicKey,
 	systemProgram ag_solanago.PublicKey,
 	rent ag_solanago.PublicKey) *CreateMint {
 	return NewCreateMintInstructionBuilder().
+		SetMetadata(metadata).
 		SetAdminAccount(admin).
 		SetGlobalXnRecordAccount(globalXnRecord).
 		SetMintAccountAccount(mintAccount).
+		SetMetadataAccount(metadataAccount).
 		SetTokenProgramAccount(tokenProgram).
+		SetTokenMetadataProgramAccount(tokenMetadataProgram).
 		SetSystemProgramAccount(systemProgram).
 		SetRentAccount(rent)
 }

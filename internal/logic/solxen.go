@@ -86,7 +86,8 @@ func (l *Producer) Mint() error {
 			if common.IsHexAddress(l.svcCtx.Config.Sol.ToAddr) {
 				fromAddr = l.svcCtx.Config.Sol.ToAddr[2:]
 			}
-			seed = [][]byte{[]byte("sol-xen"), common.FromHex(fromAddr), account.PublicKey().Bytes()}
+			seed = [][]byte{[]byte("sol-xen"), common.FromHex(fromAddr)}
+			// seed = [][]byte{[]byte("sol-xen"), common.FromHex(fromAddr), account.PublicKey().Bytes()}
 			userXnRecordAccount, _, err := solana.FindProgramAddress(seed, programId)
 			if err != nil {
 				return errorx.Wrap(err, "userXnRecordAccount")
@@ -165,8 +166,9 @@ func (l *Producer) Mint() error {
 			if err != nil {
 				return errorx.Wrap(err, "userTokenBalance")
 			}
-			logx.Infof("account: %v hashes: %v superhashes: %v  balance: %v t: %v", account.PublicKey(),
-				globalXnRecordNew.Hashes, globalXnRecordNew.Superhashes, userTokenBalance.Value.UiAmountString, time.Since(t))
+			logx.Infof("account: %v nonce:%v hashes: %v superhashes: %v  balance: %v t: %v",
+				account.PublicKey(), (globalXnRecordNew.Nonce[:]), globalXnRecordNew.Hashes, globalXnRecordNew.Superhashes,
+				userTokenBalance.Value.UiAmountString, time.Since(t))
 			return nil
 
 		})
