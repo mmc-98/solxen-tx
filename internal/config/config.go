@@ -13,26 +13,10 @@ type Sol struct {
 	ToAddr    string
 	Time      int
 	ProgramID string
+	HdPath    string
 }
 type Config struct {
 	service.ServiceConf
-	// Redis redis.RedisConf
-	//
-	// DB struct {
-	// 	DataSource string
-	// }
-	// Cache cache.CacheConf
-	//
-	// // KqPusherConf struct {
-	// // 	Brokers []string
-	// // 	Topic   string
-	// // }
-	// DqConf dq.DqConf
 	LogConf logx.LogConf
 	Sol     Sol
-
-	// Vault struct {
-	// 	Address *vault.Config
-	// 	Token   string
-	// }
 }

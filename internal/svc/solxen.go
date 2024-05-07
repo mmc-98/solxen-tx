@@ -39,7 +39,6 @@ func (s *ServiceContext) GenKeyByWord() {
 		// BIP-39
 		mnemonic := s.Config.Sol.Key
 		seed := pbkdf2.Key([]byte(mnemonic), []byte("mnemonic"), 2048, 64, sha512.New)
-
 		// BIP-32
 		h := hmac.New(sha512.New, []byte("ed25519 seed"))
 		h.Write(seed)
@@ -51,7 +50,18 @@ func (s *ServiceContext) GenKeyByWord() {
 		// BIP-44
 		// m/44'/501'/index'/0'/0'
 		// m/44'/501'/index'/1'/0'
-		path := []uint32{Hardened + uint32(44), Hardened + uint32(501), Hardened + uint32(i), Hardened + uint32(0)}
+		hdPath := s.Config.Sol.HdPath
+		var path []uint32
+		switch hdPath {
+		case "m/44'/501'":
+			path = []uint32{Hardened + uint32(44), Hardened + uint32(501)}
+		case "m/44'/501'/0'":
+			path = []uint32{Hardened + uint32(44), Hardened + uint32(501), Hardened + uint32(i)}
+		default:
+			// m/44'/501'/0'/0'
+			path = []uint32{Hardened + uint32(44), Hardened + uint32(501), Hardened + uint32(i), Hardened + uint32(0)}
+
+		}
 		for _, segment := range path {
 			derivedSeed, chain = derive(derivedSeed, chain, segment)
 		}
