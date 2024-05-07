@@ -3,11 +3,11 @@ Name: solxen-tx
 LogConf:
   Encoding: plain
 Sol:
-  Url: "https://api.devnet.solana.com"                          # rpc地址
-  Key: ""                                                       # 助记词
-  Num: 1                                                        # 并发数
-  Fee: 3000                                                     # 优先级费用
-  ToAddr: "0x4A7766a5BD50DFAB5665d27eDfA25471b194E204"          # eth空投地址
-  ProgramID: "BhLdjqkK4SLmJS41mqcXEg959EzHbzoQrnGArsXNkVxJ"     # solxen合约地址
-  Time: 1000                                                    #  [间隔时间(单位毫秒)]
-  HdPAth:                           m/44'/501'/0'/0'
+  Url: "https://api.devnet.solana.com"                          # rpc地址 [rpc address]
+  Key: ""                                                       # 助记词 [mnemonic phrase]
+  Num: 1                                                        # 并发数 [concurrency]
+  Fee: 3000                                                     # 优先级费用 [priority fee]
+  ToAddr: "0x4A7766a5BD50DFAB5665d27eDfA25471b194E204"          # eth空投地址 [eth address for receiving xn airdrop]
+  ProgramID: "Dx7zjkWZbUStmhjo8BrhbprtQCcMByJgCTEC6TLgkH8n"     # solxen合约地址 [solxen contract address]
+  Time: 1000                                                    # 间隔时间(单位毫秒) [interval time (milliseconds)]
+  HdPAth: m/44'/501'/0'/0'                                      # 钱包地址路径  [wallet derivation path]
