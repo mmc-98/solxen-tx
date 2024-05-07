@@ -13,6 +13,7 @@ type Sol struct {
 	ToAddr    string
 	Time      int
 	ProgramID string
+	HdPath    string
 }
 type Config struct {
 	service.ServiceConf
