@@ -4,6 +4,61 @@ package sol_xen
 
 import ag_binary "github.com/gagliardetto/binary"
 
+type InitTokenParams struct {
+	Name     string
+	Symbol   string
+	Uri      string
+	Decimals uint8
+}
+
+func (obj InitTokenParams) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
+	// Serialize `Name` param:
+	err = encoder.Encode(obj.Name)
+	if err != nil {
+		return err
+	}
+	// Serialize `Symbol` param:
+	err = encoder.Encode(obj.Symbol)
+	if err != nil {
+		return err
+	}
+	// Serialize `Uri` param:
+	err = encoder.Encode(obj.Uri)
+	if err != nil {
+		return err
+	}
+	// Serialize `Decimals` param:
+	err = encoder.Encode(obj.Decimals)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (obj *InitTokenParams) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
+	// Deserialize `Name`:
+	err = decoder.Decode(&obj.Name)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Symbol`:
+	err = decoder.Decode(&obj.Symbol)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Uri`:
+	err = decoder.Decode(&obj.Uri)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Decimals`:
+	err = decoder.Decode(&obj.Decimals)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 type EthAccount struct {
 	Address [20]uint8
 }

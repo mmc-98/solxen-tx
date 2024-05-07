@@ -8,7 +8,8 @@ import (
 )
 
 type UserXnRecord struct {
-	Points ag_binary.Uint128
+	Hashes      uint64
+	Superhashes uint64
 }
 
 var UserXnRecordDiscriminator = [8]byte{49, 253, 198, 222, 235, 109, 119, 115}
@@ -19,8 +20,13 @@ func (obj UserXnRecord) MarshalWithEncoder(encoder *ag_binary.Encoder) (err erro
 	if err != nil {
 		return err
 	}
-	// Serialize `Points` param:
-	err = encoder.Encode(obj.Points)
+	// Serialize `Hashes` param:
+	err = encoder.Encode(obj.Hashes)
+	if err != nil {
+		return err
+	}
+	// Serialize `Superhashes` param:
+	err = encoder.Encode(obj.Superhashes)
 	if err != nil {
 		return err
 	}
@@ -41,8 +47,13 @@ func (obj *UserXnRecord) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err e
 				fmt.Sprint(discriminator[:]))
 		}
 	}
-	// Deserialize `Points`:
-	err = decoder.Decode(&obj.Points)
+	// Deserialize `Hashes`:
+	err = decoder.Decode(&obj.Hashes)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Superhashes`:
+	err = decoder.Decode(&obj.Superhashes)
 	if err != nil {
 		return err
 	}
@@ -52,10 +63,10 @@ func (obj *UserXnRecord) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err e
 type GlobalXnRecord struct {
 	Amp         uint16
 	LastAmpSlot uint64
-	Points      ag_binary.Uint128
-	Hashes      uint32
-	Superhashes uint32
-	Txs         uint32
+	Hashes      uint64
+	Superhashes uint64
+	Txs         uint64
+	Nonce       [4]uint8
 }
 
 var GlobalXnRecordDiscriminator = [8]byte{29, 48, 183, 205, 201, 7, 241, 7}
@@ -76,11 +87,6 @@ func (obj GlobalXnRecord) MarshalWithEncoder(encoder *ag_binary.Encoder) (err er
 	if err != nil {
 		return err
 	}
-	// Serialize `Points` param:
-	err = encoder.Encode(obj.Points)
-	if err != nil {
-		return err
-	}
 	// Serialize `Hashes` param:
 	err = encoder.Encode(obj.Hashes)
 	if err != nil {
@@ -93,6 +99,11 @@ func (obj GlobalXnRecord) MarshalWithEncoder(encoder *ag_binary.Encoder) (err er
 	}
 	// Serialize `Txs` param:
 	err = encoder.Encode(obj.Txs)
+	if err != nil {
+		return err
+	}
+	// Serialize `Nonce` param:
+	err = encoder.Encode(obj.Nonce)
 	if err != nil {
 		return err
 	}
@@ -123,11 +134,6 @@ func (obj *GlobalXnRecord) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err
 	if err != nil {
 		return err
 	}
-	// Deserialize `Points`:
-	err = decoder.Decode(&obj.Points)
-	if err != nil {
-		return err
-	}
 	// Deserialize `Hashes`:
 	err = decoder.Decode(&obj.Hashes)
 	if err != nil {
@@ -140,6 +146,11 @@ func (obj *GlobalXnRecord) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err
 	}
 	// Deserialize `Txs`:
 	err = decoder.Decode(&obj.Txs)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Nonce`:
+	err = decoder.Decode(&obj.Nonce)
 	if err != nil {
 		return err
 	}
