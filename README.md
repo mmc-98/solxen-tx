@@ -8,17 +8,34 @@
 ```
 
 ## 0. 下载 [Download]
-windows:
-```shell
-https://github.com/mmc-98/solxen-tx/releases/download/v0.05/solxen-tx-v0.05-windows-amd64.zip
+
 ```
-linux:
-```shell
-https://github.com/mmc-98/solxen-tx/releases/download/v0.05/solxen-tx-v0.05-linux-amd64.tar.gz
+https://github.com/mmc-98/solxen-tx/releases
 ```
-mac Apple芯片:
+
+Windows (x64):
 ```shell
-https://github.com/mmc-98/solxen-tx/releases/download/v0.05/solxen-tx-v0.05-darwin-arm64.tar.gz
+solxen-tx-windows-amd64.zip
+```
+
+Linux (x64):
+```shell
+solxen-tx-linux-amd64.tar.gz
+```
+
+Linux (arm64):
+```shell
+solxen-tx-linux-arm64.tar.gz
+```
+
+macOS (x64):
+```shell
+solxen-tx-darwin-amd64.tar.gz
+```
+
+macOS (arm64):
+```shell
+solxen-tx-darwin-arm64.tar.gz
 ```
  
 ## 1. 配置 [Configuration]
