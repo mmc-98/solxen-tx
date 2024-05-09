@@ -10,6 +10,7 @@ import (
 type UserXnRecord struct {
 	Hashes      uint64
 	Superhashes uint64
+	Points      ag_binary.Uint128
 }
 
 var UserXnRecordDiscriminator = [8]byte{49, 253, 198, 222, 235, 109, 119, 115}
@@ -27,6 +28,11 @@ func (obj UserXnRecord) MarshalWithEncoder(encoder *ag_binary.Encoder) (err erro
 	}
 	// Serialize `Superhashes` param:
 	err = encoder.Encode(obj.Superhashes)
+	if err != nil {
+		return err
+	}
+	// Serialize `Points` param:
+	err = encoder.Encode(obj.Points)
 	if err != nil {
 		return err
 	}
@@ -54,6 +60,11 @@ func (obj *UserXnRecord) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err e
 	}
 	// Deserialize `Superhashes`:
 	err = decoder.Decode(&obj.Superhashes)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Points`:
+	err = decoder.Decode(&obj.Points)
 	if err != nil {
 		return err
 	}

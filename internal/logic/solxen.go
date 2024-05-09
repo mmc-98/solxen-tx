@@ -58,6 +58,18 @@ func (l *Producer) Mint() error {
 		return errorx.Wrap(err, "globalXnRecordAddress")
 	}
 
+	var (
+		fromAddr string
+	)
+	if common.IsHexAddress(l.svcCtx.Config.Sol.ToAddr) {
+		fromAddr = l.svcCtx.Config.Sol.ToAddr[2:]
+	}
+	seed = [][]byte{[]byte("sol-xen"), common.FromHex(fromAddr)}
+	userXnRecordAccount, _, err := solana.FindProgramAddress(seed, programId)
+	if err != nil {
+		return errorx.Wrap(err, "userXnRecordAccount")
+	}
+
 	seed = [][]byte{[]byte("mint")}
 	mint, err := l.FindProgramAddressSync(seed, programId)
 	if err != nil {
@@ -68,30 +80,18 @@ func (l *Producer) Mint() error {
 	if err != nil {
 		return errorx.Wrap(err, "mintAccount")
 	}
+	associateTokenProgram := solana.MustPublicKeyFromBase58("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL")
+	limit := computebudget.NewSetComputeUnitLimitInstruction(1400000).Build()
+	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().SetMicroLamports(l.svcCtx.Config.Sol.Fee).Build()
 
 	for _, _account := range l.svcCtx.AddrList {
 		account := _account
 		fns = append(fns, func() error {
 			t := time.Now()
-			associateTokenProgram := solana.MustPublicKeyFromBase58("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL")
-			// user := solana.MustPrivateKeyFromBase58(l.svcCtx.Config.Sol.Key)
 			userTokenAccount, _, err := solana.FindAssociatedTokenAddress(
 				account.PublicKey(),
 				mint,
 			)
-
-			var (
-				fromAddr string
-			)
-			if common.IsHexAddress(l.svcCtx.Config.Sol.ToAddr) {
-				fromAddr = l.svcCtx.Config.Sol.ToAddr[2:]
-			}
-			seed = [][]byte{[]byte("sol-xen"), common.FromHex(fromAddr)}
-			// seed = [][]byte{[]byte("sol-xen"), common.FromHex(fromAddr), account.PublicKey().Bytes()}
-			userXnRecordAccount, _, err := solana.FindProgramAddress(seed, programId)
-			if err != nil {
-				return errorx.Wrap(err, "userXnRecordAccount")
-			}
 
 			var globalXnRecordNew sol_xen.GlobalXnRecord
 			seed = [][]byte{[]byte("sol-xen-addr"), common.FromHex(fromAddr)}
@@ -125,9 +125,6 @@ func (l *Producer) Mint() error {
 			instruction := solana.NewInstruction(mintToken.ProgramID(), mintToken.Accounts(), data)
 			signers := []solana.PrivateKey{account.PrivateKey}
 
-			limit := computebudget.NewSetComputeUnitLimitInstruction(1400000).Build()
-			feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().SetMicroLamports(l.svcCtx.Config.Sol.Fee).Build()
-
 			recent, err := l.svcCtx.SolCli.GetLatestBlockhash(context.Background(), rpc.CommitmentFinalized)
 			rent := recent.Value.Blockhash
 
@@ -157,18 +154,43 @@ func (l *Producer) Mint() error {
 			if err != nil {
 				return errorx.Wrap(err, "Sign")
 			}
+			var (
+				userTokenBalance *rpc.GetTokenAccountBalanceResult
+				userXnRecord     sol_xen.UserXnRecord
+			)
+			err = mr.Finish(
+				func() error {
+					_, err = l.svcCtx.SolCli.SendTransaction(context.TODO(), tx)
+					if err != nil {
+						return errorx.Wrap(err, "sig")
+					}
+					return nil
+				},
+				func() error {
+					userTokenBalance, err = l.svcCtx.SolCli.GetTokenAccountBalance(l.ctx, userTokenAccount, rpc.CommitmentConfirmed)
+					if err != nil {
+						return errorx.Wrap(err, "userTokenBalance")
+					}
 
-			_, err = l.svcCtx.SolCli.SendTransaction(context.TODO(), tx)
+					return nil
+				},
+				func() error {
+
+					// var userXnRecord sol_xen.UserXnRecord
+					err = l.svcCtx.SolCli.GetAccountDataInto(l.ctx, userXnRecordAccount, &userXnRecord)
+					if err != nil {
+						return errorx.Wrap(err, "userXnRecord")
+					}
+					return nil
+				},
+			)
 			if err != nil {
-				return errorx.Wrap(err, "sig")
+				return err
 			}
-			userTokenBalance, err := l.svcCtx.SolCli.GetTokenAccountBalance(l.ctx, userTokenAccount, rpc.CommitmentConfirmed)
-			if err != nil {
-				return errorx.Wrap(err, "userTokenBalance")
-			}
-			logx.Infof("account: %v nonce:%v hashes: %v superhashes: %v  balance: %v t: %v",
-				account.PublicKey(), (globalXnRecordNew.Nonce[:]), globalXnRecordNew.Hashes, globalXnRecordNew.Superhashes,
+			logx.Infof("account:%v nonce:%v hashes:%v superhashes:%v  balance:%v t:%v",
+				account.PublicKey(), common.Bytes2Hex(globalXnRecordNew.Nonce[:]), userXnRecord.Hashes, userXnRecord.Superhashes,
 				userTokenBalance.Value.UiAmountString, time.Since(t))
+
 			return nil
 
 		})
