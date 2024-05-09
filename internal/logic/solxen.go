@@ -189,11 +189,14 @@ func (l *Producer) Mint() error {
 			if err != nil {
 				return err
 			}
-			logx.Infof("slot:%v account:%v  nonce:%v hashes:%v superhashes:%v  balance:%v t:%v",
-				recent.Context.Slot,
+			logx.Infof("account:%v slot:%v  nonce:%v hashes:%v superhashes:%v  balance:%v t:%v",
 				account.PublicKey(),
-				common.Bytes2Hex(globalXnRecordNew.Nonce[:]), userXnRecord.Hashes, userXnRecord.Superhashes,
-				userTokenBalance.Value.UiAmountString, time.Since(t))
+				recent.Context.Slot,
+				common.Bytes2Hex(globalXnRecordNew.Nonce[:]),
+				userXnRecord.Hashes,
+				userXnRecord.Superhashes,
+				userTokenBalance.Value.UiAmountString,
+				time.Since(t))
 
 			return nil
 
