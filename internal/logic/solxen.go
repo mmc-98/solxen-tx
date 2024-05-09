@@ -88,19 +88,11 @@ func (l *Producer) Mint() error {
 		account := _account
 		fns = append(fns, func() error {
 			t := time.Now()
+
 			userTokenAccount, _, err := solana.FindAssociatedTokenAddress(
 				account.PublicKey(),
 				mint,
 			)
-
-			var globalXnRecordNew sol_xen.GlobalXnRecord
-			seed = [][]byte{[]byte("sol-xen-addr"), common.FromHex(fromAddr)}
-			info, err := l.svcCtx.SolCli.GetAccountInfoWithOpts(l.ctx, globalXnRecordAddress, &rpc.GetAccountInfoOpts{
-				Commitment: rpc.CommitmentConfirmed})
-			err = bin.NewBinDecoder(info.GetBinary()).Decode(&globalXnRecordNew)
-			if err != nil {
-				return errorx.Wrap(err, "globalXnRecordNew")
-			}
 
 			ethAccount := common.HexToAddress(l.svcCtx.Config.Sol.ToAddr)
 			var uint8Array [20]uint8
@@ -124,10 +116,8 @@ func (l *Producer) Mint() error {
 			data, _ := mintToken.Data()
 			instruction := solana.NewInstruction(mintToken.ProgramID(), mintToken.Accounts(), data)
 			signers := []solana.PrivateKey{account.PrivateKey}
-
 			recent, err := l.svcCtx.SolCli.GetLatestBlockhash(context.Background(), rpc.CommitmentFinalized)
 			rent := recent.Value.Blockhash
-
 			tx, err := solana.NewTransactionBuilder().
 				AddInstruction(feesInit).
 				AddInstruction(limit).
@@ -155,8 +145,9 @@ func (l *Producer) Mint() error {
 				return errorx.Wrap(err, "Sign")
 			}
 			var (
-				userTokenBalance *rpc.GetTokenAccountBalanceResult
-				userXnRecord     sol_xen.UserXnRecord
+				userTokenBalance  *rpc.GetTokenAccountBalanceResult
+				userXnRecord      sol_xen.UserXnRecord
+				globalXnRecordNew sol_xen.GlobalXnRecord
 			)
 			err = mr.Finish(
 				func() error {
@@ -183,12 +174,25 @@ func (l *Producer) Mint() error {
 					}
 					return nil
 				},
+				func() error {
+
+					seed = [][]byte{[]byte("sol-xen-addr"), common.FromHex(fromAddr)}
+					info, err := l.svcCtx.SolCli.GetAccountInfoWithOpts(l.ctx, globalXnRecordAddress, &rpc.GetAccountInfoOpts{
+						Commitment: rpc.CommitmentConfirmed})
+					err = bin.NewBinDecoder(info.GetBinary()).Decode(&globalXnRecordNew)
+					if err != nil {
+						return errorx.Wrap(err, "globalXnRecordNew")
+					}
+					return nil
+				},
 			)
 			if err != nil {
 				return err
 			}
-			logx.Infof("account:%v nonce:%v hashes:%v superhashes:%v  balance:%v t:%v",
-				account.PublicKey(), common.Bytes2Hex(globalXnRecordNew.Nonce[:]), userXnRecord.Hashes, userXnRecord.Superhashes,
+			logx.Infof("slot:%v account:%v  nonce:%v hashes:%v superhashes:%v  balance:%v t:%v",
+				recent.Context.Slot,
+				account.PublicKey(),
+				common.Bytes2Hex(globalXnRecordNew.Nonce[:]), userXnRecord.Hashes, userXnRecord.Superhashes,
 				userTokenBalance.Value.UiAmountString, time.Since(t))
 
 			return nil
