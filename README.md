@@ -46,7 +46,7 @@ solxen-tx-darwin-arm64.tar.gz
 Name: solxen-tx
 Sol:
   Url: "https://api.devnet.solana.com"                          # rpc地址 [rpc address]
-  Key: ""                                                       # 助记词 [mnemonic phrase]
+  Mnemonic: ""                                                  # 助记词 [mnemonic phrase]
   Num: 1                                                        # 并发数 [concurrency]
   Fee: 3000                                                     # 优先级费用 [priority fee]
   ToAddr: "0x4A7766a5BD50DFAB5665d27eDfA25471b194E204"          # eth空投地址 [eth address for receiving xn airdrop]
