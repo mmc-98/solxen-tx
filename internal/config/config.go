@@ -7,7 +7,7 @@ import (
 
 type Sol struct {
 	Url       string
-	Key       string
+	Mnemonic  string
 	Num       int
 	Fee       uint64
 	ToAddr    string

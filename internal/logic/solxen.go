@@ -145,9 +145,9 @@ func (l *Producer) Mint() error {
 				return errorx.Wrap(err, "Sign")
 			}
 			var (
-				userTokenBalance  *rpc.GetTokenAccountBalanceResult
 				userXnRecord      sol_xen.UserXnRecord
 				globalXnRecordNew sol_xen.GlobalXnRecord
+				userTokenBalance  = new(rpc.GetTokenAccountBalanceResult)
 			)
 			err = mr.Finish(
 				func() error {
@@ -158,16 +158,10 @@ func (l *Producer) Mint() error {
 					return nil
 				},
 				func() error {
-					userTokenBalance, err = l.svcCtx.SolCli.GetTokenAccountBalance(l.ctx, userTokenAccount, rpc.CommitmentConfirmed)
-					if err != nil {
-						return errorx.Wrap(err, "userTokenBalance")
-					}
-
+					userTokenBalance, _ = l.svcCtx.SolCli.GetTokenAccountBalance(l.ctx, userTokenAccount, rpc.CommitmentConfirmed)
 					return nil
 				},
 				func() error {
-
-					// var userXnRecord sol_xen.UserXnRecord
 					err = l.svcCtx.SolCli.GetAccountDataInto(l.ctx, userXnRecordAccount, &userXnRecord)
 					if err != nil {
 						return errorx.Wrap(err, "userXnRecord")
@@ -175,7 +169,6 @@ func (l *Producer) Mint() error {
 					return nil
 				},
 				func() error {
-
 					seed = [][]byte{[]byte("sol-xen-addr"), common.FromHex(fromAddr)}
 					info, err := l.svcCtx.SolCli.GetAccountInfoWithOpts(l.ctx, globalXnRecordAddress, &rpc.GetAccountInfoOpts{
 						Commitment: rpc.CommitmentConfirmed})
