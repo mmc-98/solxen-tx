@@ -37,8 +37,7 @@ func (s *ServiceContext) GenKeyByWord() {
 	logx.Infof("len: %v", s.Config.Sol.Num)
 	for i := 0; i < s.Config.Sol.Num; i++ {
 		// BIP-39
-		mnemonic := s.Config.Sol.Key
-		seed := pbkdf2.Key([]byte(mnemonic), []byte("mnemonic"), 2048, 64, sha512.New)
+		seed := pbkdf2.Key([]byte(s.Config.Sol.Mnemonic), []byte("mnemonic"), 2048, 64, sha512.New)
 
 		// BIP-32
 		h := hmac.New(sha512.New, []byte("ed25519 seed"))
