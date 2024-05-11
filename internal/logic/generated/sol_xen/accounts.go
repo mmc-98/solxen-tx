@@ -7,17 +7,70 @@ import (
 	ag_binary "github.com/gagliardetto/binary"
 )
 
-type UserXnRecord struct {
+type UserEthXnRecord struct {
 	Hashes      uint64
-	Superhashes uint64
+	Superhashes uint32
+}
+
+var UserEthXnRecordDiscriminator = [8]byte{224, 152, 129, 49, 149, 104, 210, 196}
+
+func (obj UserEthXnRecord) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
+	// Write account discriminator:
+	err = encoder.WriteBytes(UserEthXnRecordDiscriminator[:], false)
+	if err != nil {
+		return err
+	}
+	// Serialize `Hashes` param:
+	err = encoder.Encode(obj.Hashes)
+	if err != nil {
+		return err
+	}
+	// Serialize `Superhashes` param:
+	err = encoder.Encode(obj.Superhashes)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (obj *UserEthXnRecord) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
+	// Read and check account discriminator:
+	{
+		discriminator, err := decoder.ReadTypeID()
+		if err != nil {
+			return err
+		}
+		if !discriminator.Equal(UserEthXnRecordDiscriminator[:]) {
+			return fmt.Errorf(
+				"wrong discriminator: wanted %s, got %s",
+				"[224 152 129 49 149 104 210 196]",
+				fmt.Sprint(discriminator[:]))
+		}
+	}
+	// Deserialize `Hashes`:
+	err = decoder.Decode(&obj.Hashes)
+	if err != nil {
+		return err
+	}
+	// Deserialize `Superhashes`:
+	err = decoder.Decode(&obj.Superhashes)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type UserSolXnRecord struct {
+	Hashes      uint64
+	Superhashes uint32
 	Points      ag_binary.Uint128
 }
 
-var UserXnRecordDiscriminator = [8]byte{49, 253, 198, 222, 235, 109, 119, 115}
+var UserSolXnRecordDiscriminator = [8]byte{105, 200, 79, 162, 225, 52, 172, 238}
 
-func (obj UserXnRecord) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
+func (obj UserSolXnRecord) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
 	// Write account discriminator:
-	err = encoder.WriteBytes(UserXnRecordDiscriminator[:], false)
+	err = encoder.WriteBytes(UserSolXnRecordDiscriminator[:], false)
 	if err != nil {
 		return err
 	}
@@ -39,17 +92,17 @@ func (obj UserXnRecord) MarshalWithEncoder(encoder *ag_binary.Encoder) (err erro
 	return nil
 }
 
-func (obj *UserXnRecord) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
+func (obj *UserSolXnRecord) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
 	// Read and check account discriminator:
 	{
 		discriminator, err := decoder.ReadTypeID()
 		if err != nil {
 			return err
 		}
-		if !discriminator.Equal(UserXnRecordDiscriminator[:]) {
+		if !discriminator.Equal(UserSolXnRecordDiscriminator[:]) {
 			return fmt.Errorf(
 				"wrong discriminator: wanted %s, got %s",
-				"[49 253 198 222 235 109 119 115]",
+				"[105 200 79 162 225 52 172 238]",
 				fmt.Sprint(discriminator[:]))
 		}
 	}

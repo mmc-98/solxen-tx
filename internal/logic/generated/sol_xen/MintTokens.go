@@ -18,19 +18,19 @@ type MintTokens struct {
 	//
 	// [1] = [WRITE] globalXnRecord
 	//
-	// [2] = [WRITE] userXnRecord
+	// [2] = [WRITE] xnByEth
 	//
-	// [3] = [WRITE, SIGNER] user
+	// [3] = [WRITE] xnBySol
 	//
-	// [4] = [WRITE] mintAccount
+	// [4] = [WRITE, SIGNER] user
 	//
-	// [5] = [] tokenProgram
+	// [5] = [WRITE] mintAccount
 	//
-	// [6] = [] systemProgram
+	// [6] = [] tokenProgram
 	//
-	// [7] = [] associatedTokenProgram
+	// [7] = [] systemProgram
 	//
-	// [8] = [] rent
+	// [8] = [] associatedTokenProgram
 	ag_solanago.AccountMetaSlice `bin:"-"`
 }
 
@@ -70,80 +70,80 @@ func (inst *MintTokens) GetGlobalXnRecordAccount() *ag_solanago.AccountMeta {
 	return inst.AccountMetaSlice.Get(1)
 }
 
-// SetUserXnRecordAccount sets the "userXnRecord" account.
-func (inst *MintTokens) SetUserXnRecordAccount(userXnRecord ag_solanago.PublicKey) *MintTokens {
-	inst.AccountMetaSlice[2] = ag_solanago.Meta(userXnRecord).WRITE()
+// SetXnByEthAccount sets the "xnByEth" account.
+func (inst *MintTokens) SetXnByEthAccount(xnByEth ag_solanago.PublicKey) *MintTokens {
+	inst.AccountMetaSlice[2] = ag_solanago.Meta(xnByEth).WRITE()
 	return inst
 }
 
-// GetUserXnRecordAccount gets the "userXnRecord" account.
-func (inst *MintTokens) GetUserXnRecordAccount() *ag_solanago.AccountMeta {
+// GetXnByEthAccount gets the "xnByEth" account.
+func (inst *MintTokens) GetXnByEthAccount() *ag_solanago.AccountMeta {
 	return inst.AccountMetaSlice.Get(2)
+}
+
+// SetXnBySolAccount sets the "xnBySol" account.
+func (inst *MintTokens) SetXnBySolAccount(xnBySol ag_solanago.PublicKey) *MintTokens {
+	inst.AccountMetaSlice[3] = ag_solanago.Meta(xnBySol).WRITE()
+	return inst
+}
+
+// GetXnBySolAccount gets the "xnBySol" account.
+func (inst *MintTokens) GetXnBySolAccount() *ag_solanago.AccountMeta {
+	return inst.AccountMetaSlice.Get(3)
 }
 
 // SetUserAccount sets the "user" account.
 func (inst *MintTokens) SetUserAccount(user ag_solanago.PublicKey) *MintTokens {
-	inst.AccountMetaSlice[3] = ag_solanago.Meta(user).WRITE().SIGNER()
+	inst.AccountMetaSlice[4] = ag_solanago.Meta(user).WRITE().SIGNER()
 	return inst
 }
 
 // GetUserAccount gets the "user" account.
 func (inst *MintTokens) GetUserAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(3)
+	return inst.AccountMetaSlice.Get(4)
 }
 
 // SetMintAccountAccount sets the "mintAccount" account.
 func (inst *MintTokens) SetMintAccountAccount(mintAccount ag_solanago.PublicKey) *MintTokens {
-	inst.AccountMetaSlice[4] = ag_solanago.Meta(mintAccount).WRITE()
+	inst.AccountMetaSlice[5] = ag_solanago.Meta(mintAccount).WRITE()
 	return inst
 }
 
 // GetMintAccountAccount gets the "mintAccount" account.
 func (inst *MintTokens) GetMintAccountAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(4)
+	return inst.AccountMetaSlice.Get(5)
 }
 
 // SetTokenProgramAccount sets the "tokenProgram" account.
 func (inst *MintTokens) SetTokenProgramAccount(tokenProgram ag_solanago.PublicKey) *MintTokens {
-	inst.AccountMetaSlice[5] = ag_solanago.Meta(tokenProgram)
+	inst.AccountMetaSlice[6] = ag_solanago.Meta(tokenProgram)
 	return inst
 }
 
 // GetTokenProgramAccount gets the "tokenProgram" account.
 func (inst *MintTokens) GetTokenProgramAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(5)
+	return inst.AccountMetaSlice.Get(6)
 }
 
 // SetSystemProgramAccount sets the "systemProgram" account.
 func (inst *MintTokens) SetSystemProgramAccount(systemProgram ag_solanago.PublicKey) *MintTokens {
-	inst.AccountMetaSlice[6] = ag_solanago.Meta(systemProgram)
+	inst.AccountMetaSlice[7] = ag_solanago.Meta(systemProgram)
 	return inst
 }
 
 // GetSystemProgramAccount gets the "systemProgram" account.
 func (inst *MintTokens) GetSystemProgramAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(6)
+	return inst.AccountMetaSlice.Get(7)
 }
 
 // SetAssociatedTokenProgramAccount sets the "associatedTokenProgram" account.
 func (inst *MintTokens) SetAssociatedTokenProgramAccount(associatedTokenProgram ag_solanago.PublicKey) *MintTokens {
-	inst.AccountMetaSlice[7] = ag_solanago.Meta(associatedTokenProgram)
+	inst.AccountMetaSlice[8] = ag_solanago.Meta(associatedTokenProgram)
 	return inst
 }
 
 // GetAssociatedTokenProgramAccount gets the "associatedTokenProgram" account.
 func (inst *MintTokens) GetAssociatedTokenProgramAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(7)
-}
-
-// SetRentAccount sets the "rent" account.
-func (inst *MintTokens) SetRentAccount(rent ag_solanago.PublicKey) *MintTokens {
-	inst.AccountMetaSlice[8] = ag_solanago.Meta(rent)
-	return inst
-}
-
-// GetRentAccount gets the "rent" account.
-func (inst *MintTokens) GetRentAccount() *ag_solanago.AccountMeta {
 	return inst.AccountMetaSlice.Get(8)
 }
 
@@ -181,25 +181,25 @@ func (inst *MintTokens) Validate() error {
 			return errors.New("accounts.GlobalXnRecord is not set")
 		}
 		if inst.AccountMetaSlice[2] == nil {
-			return errors.New("accounts.UserXnRecord is not set")
+			return errors.New("accounts.XnByEth is not set")
 		}
 		if inst.AccountMetaSlice[3] == nil {
-			return errors.New("accounts.User is not set")
+			return errors.New("accounts.XnBySol is not set")
 		}
 		if inst.AccountMetaSlice[4] == nil {
-			return errors.New("accounts.MintAccount is not set")
+			return errors.New("accounts.User is not set")
 		}
 		if inst.AccountMetaSlice[5] == nil {
-			return errors.New("accounts.TokenProgram is not set")
+			return errors.New("accounts.MintAccount is not set")
 		}
 		if inst.AccountMetaSlice[6] == nil {
-			return errors.New("accounts.SystemProgram is not set")
+			return errors.New("accounts.TokenProgram is not set")
 		}
 		if inst.AccountMetaSlice[7] == nil {
-			return errors.New("accounts.AssociatedTokenProgram is not set")
+			return errors.New("accounts.SystemProgram is not set")
 		}
 		if inst.AccountMetaSlice[8] == nil {
-			return errors.New("accounts.Rent is not set")
+			return errors.New("accounts.AssociatedTokenProgram is not set")
 		}
 	}
 	return nil
@@ -222,13 +222,13 @@ func (inst *MintTokens) EncodeToTree(parent ag_treeout.Branches) {
 					instructionBranch.Child("Accounts[len=9]").ParentFunc(func(accountsBranch ag_treeout.Branches) {
 						accountsBranch.Child(ag_format.Meta("             userToken", inst.AccountMetaSlice.Get(0)))
 						accountsBranch.Child(ag_format.Meta("        globalXnRecord", inst.AccountMetaSlice.Get(1)))
-						accountsBranch.Child(ag_format.Meta("          userXnRecord", inst.AccountMetaSlice.Get(2)))
-						accountsBranch.Child(ag_format.Meta("                  user", inst.AccountMetaSlice.Get(3)))
-						accountsBranch.Child(ag_format.Meta("                  mint", inst.AccountMetaSlice.Get(4)))
-						accountsBranch.Child(ag_format.Meta("          tokenProgram", inst.AccountMetaSlice.Get(5)))
-						accountsBranch.Child(ag_format.Meta("         systemProgram", inst.AccountMetaSlice.Get(6)))
-						accountsBranch.Child(ag_format.Meta("associatedTokenProgram", inst.AccountMetaSlice.Get(7)))
-						accountsBranch.Child(ag_format.Meta("                  rent", inst.AccountMetaSlice.Get(8)))
+						accountsBranch.Child(ag_format.Meta("               xnByEth", inst.AccountMetaSlice.Get(2)))
+						accountsBranch.Child(ag_format.Meta("               xnBySol", inst.AccountMetaSlice.Get(3)))
+						accountsBranch.Child(ag_format.Meta("                  user", inst.AccountMetaSlice.Get(4)))
+						accountsBranch.Child(ag_format.Meta("                  mint", inst.AccountMetaSlice.Get(5)))
+						accountsBranch.Child(ag_format.Meta("          tokenProgram", inst.AccountMetaSlice.Get(6)))
+						accountsBranch.Child(ag_format.Meta("         systemProgram", inst.AccountMetaSlice.Get(7)))
+						accountsBranch.Child(ag_format.Meta("associatedTokenProgram", inst.AccountMetaSlice.Get(8)))
 					})
 				})
 		})
@@ -258,22 +258,22 @@ func NewMintTokensInstruction(
 	// Accounts:
 	userTokenAccount ag_solanago.PublicKey,
 	globalXnRecord ag_solanago.PublicKey,
-	userXnRecord ag_solanago.PublicKey,
+	xnByEth ag_solanago.PublicKey,
+	xnBySol ag_solanago.PublicKey,
 	user ag_solanago.PublicKey,
 	mintAccount ag_solanago.PublicKey,
 	tokenProgram ag_solanago.PublicKey,
 	systemProgram ag_solanago.PublicKey,
-	associatedTokenProgram ag_solanago.PublicKey,
-	rent ag_solanago.PublicKey) *MintTokens {
+	associatedTokenProgram ag_solanago.PublicKey) *MintTokens {
 	return NewMintTokensInstructionBuilder().
 		SetEthAccount(ethAccount).
 		SetUserTokenAccountAccount(userTokenAccount).
 		SetGlobalXnRecordAccount(globalXnRecord).
-		SetUserXnRecordAccount(userXnRecord).
+		SetXnByEthAccount(xnByEth).
+		SetXnBySolAccount(xnBySol).
 		SetUserAccount(user).
 		SetMintAccountAccount(mintAccount).
 		SetTokenProgramAccount(tokenProgram).
 		SetSystemProgramAccount(systemProgram).
-		SetAssociatedTokenProgramAccount(associatedTokenProgram).
-		SetRentAccount(rent)
+		SetAssociatedTokenProgramAccount(associatedTokenProgram)
 }

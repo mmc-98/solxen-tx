@@ -50,7 +50,7 @@ Sol:
   Num: 1                                                        # 并发数 [concurrency]
   Fee: 3000                                                     # 优先级费用 [priority fee]
   ToAddr: "0x4A7766a5BD50DFAB5665d27eDfA25471b194E204"          # eth空投地址 [eth address for receiving xn airdrop]
-  ProgramID: "64SYet8RCT5ayZpMGbhcpk3vmt8UkwjZq8uy8Sd6V46A"     # solxen合约地址 [solxen contract address]
+  ProgramID: "7LBe4g8Q6hq8Sk1nT8tQUiz2mCHjsoQJbmZ7zCQtutuT"     # solxen合约地址 [solxen contract address]
   Time: 1000                                                    # 间隔时间(单位毫秒) [interval time (milliseconds)]
   HdPAth: m/44'/501'/0'/0'                                      # 钱包地址路径 [wallet derivation path]
 ```

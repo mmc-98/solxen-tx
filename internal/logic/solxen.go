@@ -64,10 +64,10 @@ func (l *Producer) Mint() error {
 	if common.IsHexAddress(l.svcCtx.Config.Sol.ToAddr) {
 		fromAddr = l.svcCtx.Config.Sol.ToAddr[2:]
 	}
-	seed = [][]byte{[]byte("sol-xen"), common.FromHex(fromAddr)}
-	userXnRecordAccount, _, err := solana.FindProgramAddress(seed, programId)
+	seed = [][]byte{[]byte("xn-by-eth"), common.FromHex(fromAddr)}
+	userEthXnRecordAccount, _, err := solana.FindProgramAddress(seed, programId)
 	if err != nil {
-		return errorx.Wrap(err, "userXnRecordAccount")
+		return errorx.Wrap(err, "userEthXnRecordAccount")
 	}
 
 	seed = [][]byte{[]byte("mint")}
@@ -80,7 +80,7 @@ func (l *Producer) Mint() error {
 	if err != nil {
 		return errorx.Wrap(err, "mintAccount")
 	}
-	associateTokenProgram := solana.MustPublicKeyFromBase58("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL")
+
 	limit := computebudget.NewSetComputeUnitLimitInstruction(1400000).Build()
 	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().SetMicroLamports(l.svcCtx.Config.Sol.Fee).Build()
 
@@ -88,6 +88,12 @@ func (l *Producer) Mint() error {
 		account := _account
 		fns = append(fns, func() error {
 			t := time.Now()
+
+			seed = [][]byte{[]byte("xn-by-sol"), account.PublicKey().Bytes()}
+			userSolXnRecordAccount, _, err := solana.FindProgramAddress(seed, programId)
+			if err != nil {
+				return errorx.Wrap(err, "userSolXnRecordAccount")
+			}
 
 			userTokenAccount, _, err := solana.FindAssociatedTokenAddress(
 				account.PublicKey(),
@@ -104,15 +110,16 @@ func (l *Producer) Mint() error {
 				SetEthAccount(eth).
 				SetUserTokenAccountAccount(userTokenAccount).
 				SetGlobalXnRecordAccount(globalXnRecordAddress).
-				SetUserXnRecordAccount(userXnRecordAccount).
+				SetXnByEthAccount(userEthXnRecordAccount).
+				SetXnBySolAccount(userSolXnRecordAccount).
 				SetUserAccount(account.PublicKey()).
 				SetMintAccountAccount(mint).
 				SetTokenProgramAccount(solana.TokenProgramID).
 				SetSystemProgramAccount(solana.SystemProgramID).
-				SetAssociatedTokenProgramAccount(associateTokenProgram).
-				SetRentAccount(solana.SysVarRentPubkey).Build()
+				SetAssociatedTokenProgramAccount(solana.SPLAssociatedTokenAccountProgramID).Build()
 
 			sol_xen.SetProgramID(solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramID))
+
 			data, _ := mintToken.Data()
 			instruction := solana.NewInstruction(mintToken.ProgramID(), mintToken.Accounts(), data)
 			signers := []solana.PrivateKey{account.PrivateKey}
@@ -145,7 +152,7 @@ func (l *Producer) Mint() error {
 				return errorx.Wrap(err, "Sign")
 			}
 			var (
-				userXnRecord      sol_xen.UserXnRecord
+				userXnRecord      sol_xen.UserEthXnRecord
 				globalXnRecordNew sol_xen.GlobalXnRecord
 				userTokenBalance  = new(rpc.GetTokenAccountBalanceResult)
 			)
@@ -158,14 +165,22 @@ func (l *Producer) Mint() error {
 					return nil
 				},
 				func() error {
-					userTokenBalance, _ = l.svcCtx.SolCli.GetTokenAccountBalance(l.ctx, userTokenAccount, rpc.CommitmentConfirmed)
+					userTokenBalance, err = l.svcCtx.SolCli.GetTokenAccountBalance(l.ctx, userTokenAccount, rpc.CommitmentConfirmed)
+					if err != nil {
+						userTokenBalance = &rpc.GetTokenAccountBalanceResult{
+							RPCContext: rpc.RPCContext{},
+							Value: &rpc.UiTokenAmount{
+								Amount:         "0",
+								Decimals:       0,
+								UiAmountString: "0",
+							},
+						}
+					}
 					return nil
 				},
 				func() error {
-					err = l.svcCtx.SolCli.GetAccountDataInto(l.ctx, userXnRecordAccount, &userXnRecord)
-					if err != nil {
-						return errorx.Wrap(err, "userXnRecord")
-					}
+					err = l.svcCtx.SolCli.GetAccountDataInto(l.ctx, userEthXnRecordAccount, &userXnRecord)
+
 					return nil
 				},
 				func() error {
@@ -182,6 +197,14 @@ func (l *Producer) Mint() error {
 			if err != nil {
 				return err
 			}
+			// buffer := bin.NewWriteByWrite(fmt.Sprintf("CreateAccountWithSeed: %v", account.PublicKey()))
+			// err = bin.NewBinEncoder(buffer).Encode(userTokenBalance)
+			// if err != nil {
+			// 	logx.Errorf("err :%v", err)
+			// }
+			//
+			// fmt.Println(buffer.String())
+
 			logx.Infof("account:%v slot:%v  nonce:%v hashes:%v superhashes:%v  balance:%v t:%v",
 				account.PublicKey(),
 				recent.Context.Slot,
