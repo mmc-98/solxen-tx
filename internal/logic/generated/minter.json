@@ -1,0 +1,196 @@
+{
+  "version": "0.1.0-epsilon",
+  "name": "sol_xen_minter",
+  "instructions": [
+    {
+      "name": "createMint",
+      "accounts": [
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "mintAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "metadata",
+          "type": {
+            "defined": "InitTokenParams"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mintTokens",
+      "accounts": [
+        {
+          "name": "userRecord",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "userTokensRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "mintAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "minerProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "kind",
+          "type": "u8"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "UserSolXnRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "hashes",
+            "type": "u64"
+          },
+          {
+            "name": "superhashes",
+            "type": "u32"
+          },
+          {
+            "name": "points",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserTokensRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pointsCounters",
+            "type": {
+              "array": [
+                "u128",
+                4
+              ]
+            }
+          },
+          {
+            "name": "tokensMinted",
+            "type": "u128"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "InitTokenParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": "string"
+          },
+          {
+            "name": "decimals",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "MintIsAlreadyActive",
+      "msg": "solXEN Mint has been already initialized"
+    },
+    {
+      "code": 6001,
+      "name": "MintIsNotActive",
+      "msg": "solXEN Mint has not yet started or is over"
+    },
+    {
+      "code": 6002,
+      "name": "ZeroSlotValue",
+      "msg": "Slot value is Zero"
+    },
+    {
+      "code": 6003,
+      "name": "BadOwner",
+      "msg": "Bad account owner"
+    },
+    {
+      "code": 6004,
+      "name": "BadParam",
+      "msg": "Bad param value"
+    }
+  ]
+}

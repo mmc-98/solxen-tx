@@ -6,14 +6,17 @@ import (
 )
 
 type Sol struct {
-	Url       string
-	Mnemonic  string
-	Num       int
-	Fee       uint64
-	ToAddr    string
-	Time      int
-	ProgramID string
-	HdPath    string
+	Url string
+	// TxnUrl    string
+	// GrpcUrl   string
+	Mnemonic       string
+	Num            int
+	Fee            uint64
+	ToAddr         string
+	Time           int
+	ProgramIdMiner string
+	ProgramId      string
+	HdPath         string
 }
 type Config struct {
 	service.ServiceConf

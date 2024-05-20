@@ -4,12 +4,20 @@ import (
 	"crypto/ed25519"
 	"crypto/hmac"
 	"crypto/sha512"
+	"crypto/x509"
+	"log"
 	"math/big"
+	pb "solxen-tx/internal/svc/proto"
+	"time"
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/mr-tron/base58"
 	"github.com/zeromicro/go-zero/core/logx"
 	"golang.org/x/crypto/pbkdf2"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/keepalive"
 )
 
 func derive(key []byte, chainCode []byte, segment uint32) ([]byte, []byte) {
@@ -34,7 +42,8 @@ const Hardened uint32 = 0x80000000
 
 func (s *ServiceContext) GenKeyByWord() {
 
-	logx.Infof("len: %v", s.Config.Sol.Num)
+	logx.Infof("len: %v ProgramID: %v ", s.Config.Sol.Num, s.Config.Sol.ProgramId)
+
 	for i := 0; i < s.Config.Sol.Num; i++ {
 		// BIP-39
 		seed := pbkdf2.Key([]byte(s.Config.Sol.Mnemonic), []byte("mnemonic"), 2048, 64, sha512.New)
@@ -72,9 +81,35 @@ func (s *ServiceContext) GenKeyByWord() {
 			panic(err)
 		}
 		// address := wallet.PublicKey().String()
-		logx.Infof("ProgramID: %v ", s.Config.Sol.ProgramID)
 		logx.Infof("account: %v", wallet.PublicKey())
 		s.AddrList = append(s.AddrList, wallet)
 	}
 
+}
+
+var kacp = keepalive.ClientParameters{
+	Time:                10 * time.Second, // send pings every 10 seconds if there is no activity
+	Timeout:             time.Second,      // wait 1 second for ping ack before considering the connection dead
+	PermitWithoutStream: true,             // send pings even without active streams
+}
+
+func NewGrpcCli(address string, plaintext bool) pb.GeyserClient {
+	var opts []grpc.DialOption
+	if plaintext {
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	} else {
+		pool, _ := x509.SystemCertPool()
+		creds := credentials.NewClientTLSFromCert(pool, "")
+		opts = append(opts, grpc.WithTransportCredentials(creds))
+	}
+
+	opts = append(opts, grpc.WithKeepaliveParams(kacp))
+
+	log.Println("Starting grpc client, connecting to", address)
+	conn, err := grpc.Dial(address, opts...)
+	if err != nil {
+		log.Fatalf("fail to dial: %v", err)
+	}
+
+	return pb.NewGeyserClient(conn)
 }
