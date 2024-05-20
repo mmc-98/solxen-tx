@@ -1,0 +1,255 @@
+{
+  "version": "0.1.0-epsilon",
+  "name": "sol_xen_miner",
+  "instructions": [
+    {
+      "name": "initMiner",
+      "accounts": [
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "globalXnRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "kind",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "mineHashes",
+      "accounts": [
+        {
+          "name": "globalXnRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "xnByEth",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "xnBySol",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "ethAccount",
+          "type": {
+            "defined": "EthAccount"
+          }
+        },
+        {
+          "name": "kind",
+          "type": "u8"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "UserEthXnRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "hashes",
+            "type": "u64"
+          },
+          {
+            "name": "superhashes",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserSolXnRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "hashes",
+            "type": "u64"
+          },
+          {
+            "name": "superhashes",
+            "type": "u32"
+          },
+          {
+            "name": "points",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GlobalXnRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amp",
+            "type": "u16"
+          },
+          {
+            "name": "lastAmpSlot",
+            "type": "u64"
+          },
+          {
+            "name": "nonce",
+            "type": {
+              "array": [
+                "u8",
+                4
+              ]
+            }
+          },
+          {
+            "name": "kind",
+            "type": "u8"
+          },
+          {
+            "name": "hashes",
+            "type": "u64"
+          },
+          {
+            "name": "superhashes",
+            "type": "u32"
+          },
+          {
+            "name": "points",
+            "type": "u128"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "EthAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "address",
+            "type": {
+              "array": [
+                "u8",
+                20
+              ]
+            }
+          },
+          {
+            "name": "addressStr",
+            "type": "string"
+          }
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "name": "HashEvent",
+      "fields": [
+        {
+          "name": "slot",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "user",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "ethAccount",
+          "type": {
+            "array": [
+              "u8",
+              20
+            ]
+          },
+          "index": false
+        },
+        {
+          "name": "hashes",
+          "type": "u8",
+          "index": false
+        },
+        {
+          "name": "superhashes",
+          "type": "u8",
+          "index": false
+        },
+        {
+          "name": "points",
+          "type": "u64",
+          "index": false
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "MintIsAlreadyActive",
+      "msg": "solXEN Mint has been already initialized"
+    },
+    {
+      "code": 6001,
+      "name": "MintIsNotActive",
+      "msg": "solXEN Mint has not yet started or is over"
+    },
+    {
+      "code": 6002,
+      "name": "ZeroSlotValue",
+      "msg": "Slot value is Zero"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidMinerKind",
+      "msg": "Invalid miner kind"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidEthAddressChecksum",
+      "msg": "Invalid Ethereum address checksum"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidEthAddressData",
+      "msg": "Ethereum address data doesnt match"
+    }
+  ]
+}

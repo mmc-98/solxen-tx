@@ -27,15 +27,10 @@ func init() {
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
 
-	c.Sol.ProgramID = "F8yUTgMN6E96QYhVVY9UVkKzKrDjpHLqrQ7bPCoqaJHz"
+	c.Sol.ProgramId = "F8yUTgMN6E96QYhVVY9UVkKzKrDjpHLqrQ7bPCoqaJHz"
 
 	s := svc.NewServiceContext(c)
 	l = NewProducerLogic(context.TODO(), s)
-}
-
-func TestGetglobalXnRecord(t *testing.T) {
-
-	l.GetglobalXnRecord()
 }
 
 func TestMint(t *testing.T) {
