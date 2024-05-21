@@ -84,11 +84,11 @@ func (l *Producer) Start() {
 
 	for {
 		// 1. CheckAddressBalance
-		// err := l.CheckAddressBalance()
-		// if err != nil {
-		// 	logx.Errorf("%v", err)
-		// 	return
-		// }
+		err := l.CheckAddressBalance()
+		if err != nil {
+			logx.Errorf("%v", err)
+			return
+		}
 		// todo 2.QueryNetWorkGas
 		// err = l.QueryNetWorkGas()
 		// if err != nil {
@@ -98,7 +98,7 @@ func (l *Producer) Start() {
 
 		// 3.Miner
 
-		err := l.Miner()
+		err = l.Miner()
 		if err != nil {
 			logx.Errorf("Mint err:%v", err)
 			continue
