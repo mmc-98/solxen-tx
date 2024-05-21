@@ -82,13 +82,13 @@ func (l *Producer) Mint() error {
 				programIdMiner,
 			).Build()
 
-			sol_xen_minter.SetProgramID(solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramId))
+			// sol_xen_minter.SetProgramID(solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramId))
 
 			data, _ := mintToken.Data()
 			// spew.Dump(data)
 			// logx.Infof("data :%v", data)
 
-			instruction := solana.NewInstruction(mintToken.ProgramID(), mintToken.Accounts(), data)
+			instruction := solana.NewInstruction(solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramId), mintToken.Accounts(), data)
 
 			// spew.Dump(instruction)
 

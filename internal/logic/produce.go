@@ -3,8 +3,10 @@ package logic
 import (
 	"context"
 	"solxen-tx/internal/svc"
+	"sync"
 	"time"
 
+	"github.com/gagliardetto/solana-go"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -12,7 +14,9 @@ type Producer struct {
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 	logx.Logger
-	all int
+	all            int
+	mux            sync.RWMutex
+	ProgramIdMiner solana.PublicKeySlice
 }
 
 func NewProducerLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Producer {
@@ -21,6 +25,13 @@ func NewProducerLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Producer
 		svcCtx: svcCtx,
 		Logger: logx.WithContext(ctx),
 		all:    0,
+		mux:    sync.RWMutex{},
+		ProgramIdMiner: solana.PublicKeySlice{
+			solana.MustPublicKeyFromBase58("H4Nk2SDQncEv5Cc6GAbradB4WLrHn7pi9VByFL9zYZcA"),
+			solana.MustPublicKeyFromBase58("58UESDt7K7GqutuHBYRuskSgX6XoFe8HXjwrAtyeDULM"),
+			solana.MustPublicKeyFromBase58("B1Dw79PE8dzpHPKjiQ8HYUBZ995hL1U32bUTRdNVtRbr"),
+			solana.MustPublicKeyFromBase58("7ukQWD7UqoC61eATrBMrdfMrJMUuY1wuPTk4m4noZpsH"),
+		},
 	}
 }
 

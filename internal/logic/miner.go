@@ -33,17 +33,32 @@ func (l *Producer) Miner() error {
 	// return nil
 
 	var (
-		fns            []func() error
-		ProgramIdMiner = solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramIdMiner)
-		limit          = computebudget.NewSetComputeUnitLimitInstruction(1150000).Build()
-		feesInit       = computebudget.NewSetComputeUnitPriceInstructionBuilder().SetMicroLamports(l.svcCtx.Config.Sol.Fee).Build()
+		fns []func() error
+		// ProgramIdMiner = solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramIdMiner)
+		// ProgramIdMiner = solana.PublicKeySlice{
+		// 	solana.MustPublicKeyFromBase58("H4Nk2SDQncEv5Cc6GAbradB4WLrHn7pi9VByFL9zYZcA"),
+		// 	solana.MustPublicKeyFromBase58("58UESDt7K7GqutuHBYRuskSgX6XoFe8HXjwrAtyeDULM"),
+		// 	solana.MustPublicKeyFromBase58("B1Dw79PE8dzpHPKjiQ8HYUBZ995hL1U32bUTRdNVtRbr"),
+		// 	solana.MustPublicKeyFromBase58("7ukQWD7UqoC61eATrBMrdfMrJMUuY1wuPTk4m4noZpsH"),
+		// }
+		limit    = computebudget.NewSetComputeUnitLimitInstruction(1150000).Build()
+		feesInit = computebudget.NewSetComputeUnitPriceInstructionBuilder().SetMicroLamports(l.svcCtx.Config.Sol.Fee).Build()
 	)
+	ethAccount := common.HexToAddress(l.svcCtx.Config.Sol.ToAddr)
+	var uint8Array [20]uint8
+	copy(uint8Array[:], ethAccount[:])
+	eth := sol_xen_miner.EthAccount{}
+	eth.Address = uint8Array
+	eth.AddressStr = ethAccount.String()
 
 	for _index, _account := range l.svcCtx.AddrList {
 		account := _account
 		index := _index
 		kind := index % 4
 		fns = append(fns, func() error {
+
+			// logx.Infof("account:%v kind:%v ProgramIdMiner[kind]:%v", account.PublicKey(), kind, ProgramIdMiner[kind])
+
 			t := time.Now()
 			// global_xn_record_pda
 			globalXnRecordPda, _, err := solana.FindProgramAddress(
@@ -51,7 +66,7 @@ func (l *Producer) Miner() error {
 					[]byte("xn-miner-global"),
 					{uint8(kind)},
 				},
-				ProgramIdMiner)
+				l.ProgramIdMiner[kind])
 			if err != nil {
 				return errorx.Wrap(err, "global_xn_record_pda")
 			}
@@ -68,9 +83,9 @@ func (l *Producer) Miner() error {
 					[]byte("xn-by-eth"),
 					common.FromHex(fromAddr),
 					{uint8(kind)},
-					ProgramIdMiner.Bytes(),
+					l.ProgramIdMiner[kind].Bytes(),
 				},
-				ProgramIdMiner)
+				l.ProgramIdMiner[kind])
 			if err != nil {
 				return errorx.Wrap(err, "userEthXnRecordAccount")
 			}
@@ -80,19 +95,12 @@ func (l *Producer) Miner() error {
 					[]byte("xn-by-sol"),
 					account.PublicKey().Bytes(),
 					{uint8(kind)},
-					ProgramIdMiner.Bytes(),
+					l.ProgramIdMiner[kind].Bytes(),
 				},
-				ProgramIdMiner)
+				l.ProgramIdMiner[kind])
 			if err != nil {
 				return errorx.Wrap(err, "global_xn_record_pda")
 			}
-
-			ethAccount := common.HexToAddress(l.svcCtx.Config.Sol.ToAddr)
-			var uint8Array [20]uint8
-			copy(uint8Array[:], ethAccount[:])
-			eth := sol_xen_miner.EthAccount{}
-			eth.Address = uint8Array
-			eth.AddressStr = ethAccount.String()
 
 			mintToken := sol_xen_miner.NewMineHashesInstruction(
 				eth,
@@ -104,11 +112,12 @@ func (l *Producer) Miner() error {
 				solana.SystemProgramID,
 			).Build()
 
-			sol_xen_miner.SetProgramID(ProgramIdMiner)
-
+			// l.svcCtx.Lock.Lock()
+			// sol_xen_miner.SetProgramID(ProgramIdMiner[kind])
 			data, _ := mintToken.Data()
-			instruction := solana.NewInstruction(mintToken.ProgramID(), mintToken.Accounts(), data)
-			signers := []solana.PrivateKey{account.PrivateKey}
+			instruction := solana.NewInstruction(l.ProgramIdMiner[kind], mintToken.Accounts(), data)
+			// l.svcCtx.Lock.Unlock()
+
 			recent, err := l.svcCtx.SolCli.GetLatestBlockhash(context.Background(), rpc.CommitmentFinalized)
 			rent := recent.Value.Blockhash
 			tx, err := solana.NewTransactionBuilder().
@@ -122,6 +131,7 @@ func (l *Producer) Miner() error {
 				return errorx.Wrap(err, "tx")
 			}
 
+			signers := []solana.PrivateKey{account.PrivateKey}
 			_, err = tx.Sign(
 				func(key solana.PublicKey) *solana.PrivateKey {
 					for _, signer := range signers {
@@ -135,6 +145,7 @@ func (l *Producer) Miner() error {
 			if err != nil {
 				return errorx.Wrap(err, "Sign")
 			}
+
 			var (
 				userAccountDataRaw    sol_xen_miner.UserEthXnRecord
 				userSolAccountDataRaw sol_xen_miner.UserSolXnRecord
@@ -161,7 +172,8 @@ func (l *Producer) Miner() error {
 						&userAccountDataRaw,
 					)
 					if err != nil {
-						return errorx.Wrap(err, "globalXnRecordNew")
+						logx.Infof("userAccountDataRaw:%v", err)
+						return nil
 					}
 					return nil
 				},
@@ -173,7 +185,8 @@ func (l *Producer) Miner() error {
 						&userSolAccountDataRaw,
 					)
 					if err != nil {
-						return errorx.Wrap(err, "globalXnRecordNew")
+						logx.Infof("userSolAccountDataRaw:%v", err)
+						return nil
 					}
 					return nil
 				},
@@ -205,11 +218,6 @@ func (l *Producer) Miner() error {
 
 }
 
-func (l *Producer) FindProgramAddressSync(seeds [][]byte, programId solana.PublicKey) (solana.PublicKey, error) {
-	resp, _, err := solana.FindProgramAddress(seeds, programId)
-	return resp, err
-}
-
 func (l *Producer) CheckAddressBalance() error {
 
 	var (
@@ -238,9 +246,5 @@ func (l *Producer) CheckAddressBalance() error {
 }
 
 func (l *Producer) QueryNetWorkGas() error {
-	return nil
-}
-
-func (l *Producer) ListTxpoolPendding() error {
 	return nil
 }
