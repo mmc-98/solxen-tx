@@ -33,14 +33,7 @@ func (l *Producer) Miner() error {
 	// return nil
 
 	var (
-		fns []func() error
-		// ProgramIdMiner = solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramIdMiner)
-		// ProgramIdMiner = solana.PublicKeySlice{
-		// 	solana.MustPublicKeyFromBase58("H4Nk2SDQncEv5Cc6GAbradB4WLrHn7pi9VByFL9zYZcA"),
-		// 	solana.MustPublicKeyFromBase58("58UESDt7K7GqutuHBYRuskSgX6XoFe8HXjwrAtyeDULM"),
-		// 	solana.MustPublicKeyFromBase58("B1Dw79PE8dzpHPKjiQ8HYUBZ995hL1U32bUTRdNVtRbr"),
-		// 	solana.MustPublicKeyFromBase58("7ukQWD7UqoC61eATrBMrdfMrJMUuY1wuPTk4m4noZpsH"),
-		// }
+		fns      []func() error
 		limit    = computebudget.NewSetComputeUnitLimitInstruction(1150000).Build()
 		feesInit = computebudget.NewSetComputeUnitPriceInstructionBuilder().SetMicroLamports(l.svcCtx.Config.Sol.Fee).Build()
 	)
@@ -56,8 +49,6 @@ func (l *Producer) Miner() error {
 		index := _index
 		kind := index % 4
 		fns = append(fns, func() error {
-
-			// logx.Infof("account:%v kind:%v ProgramIdMiner[kind]:%v", account.PublicKey(), kind, ProgramIdMiner[kind])
 
 			t := time.Now()
 			// global_xn_record_pda

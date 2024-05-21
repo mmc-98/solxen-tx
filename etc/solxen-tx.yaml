@@ -3,12 +3,12 @@ Name: solxen-tx
 LogConf:
   Encoding: plain
 Sol:
-  Url: "https://api.devnet.solana.com"                          # rpc地址 [rpc address]
+  Url: "http://45.250.254.197:8899"                             # rpc地址 [rpc address]
+  WalletPath: "/Users/abc/.config/solana"                       # json文件路径
   Mnemonic: ""                                                  # 助记词 [mnemonic phrase]
   Num: 1                                                        # 并发数 [concurrency]
   Fee: 3000                                                     # 优先级费用 [priority fee]
   ToAddr: "0x4A7766a5BD50DFAB5665d27eDfA25471b194E204"          # eth空投地址 [eth address for receiving xn airdrop]
   ProgramID: "8HTvrqZT1JP279DMLT5SfNfGHxUeznem4Bh7zy92sWWx"     # solxen合约地址 [solxen contract address]
-  programIdMiner: "H4Nk2SDQncEv5Cc6GAbradB4WLrHn7pi9VByFL9zYZcA"
   Time: 1000                                                    # 间隔时间(单位毫秒) [interval time (milliseconds)]
   HdPAth: m/44'/501'/0'/0'                                      # 钱包地址路径  [wallet derivation path]
