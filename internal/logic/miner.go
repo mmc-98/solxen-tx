@@ -12,6 +12,7 @@ import (
 	"github.com/gagliardetto/solana-go"
 	computebudget "github.com/gagliardetto/solana-go/programs/compute-budget"
 	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/montanaflynn/stats"
 	"github.com/zeromicro/go-zero/core/errorx"
 	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/core/mr"
@@ -19,23 +20,9 @@ import (
 
 func (l *Producer) Miner() error {
 
-	// out := make([]rpc.PriorizationFeeResult, 0)
-	// feeAccount := []solana.PublicKey{
-	// 	// solana.MustPublicKeyFromBase58("41twqNJmPHv8a5AW32if2CcGRcPzaetwErXaNggGWu1q"),
-	// 	solana.MustPublicKeyFromBase58("7LBe4g8Q6hq8Sk1nT8tQUiz2mCHjsoQJbmZ7zCQtutuT"),
-	// }
-	// fee := l.svcCtx.Config.Sol.Fee
-	// if fee == 0 {
-	// 	out, _ = l.svcCtx.SolCli.GetRecentPrioritizationFees(l.ctx, feeAccount)
-	// }
-	// _ = out
-	// spew.Dump(out)
-	// return nil
-
 	var (
-		fns      []func() error
-		limit    = computebudget.NewSetComputeUnitLimitInstruction(1150000).Build()
-		feesInit = computebudget.NewSetComputeUnitPriceInstructionBuilder().SetMicroLamports(l.svcCtx.Config.Sol.Fee).Build()
+		fns   []func() error
+		limit = computebudget.NewSetComputeUnitLimitInstruction(1150000).Build()
 	)
 	ethAccount := common.HexToAddress(l.svcCtx.Config.Sol.ToAddr)
 	var uint8Array [20]uint8
@@ -44,6 +31,23 @@ func (l *Producer) Miner() error {
 	eth.Address = uint8Array
 	eth.AddressStr = ethAccount.String()
 
+	out := make([]rpc.PriorizationFeeResult, 0)
+	feeAccount := []solana.PublicKey{
+		solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramId),
+	}
+
+	fee := l.svcCtx.Config.Sol.Fee
+	if fee == 0 {
+		out, _ = l.svcCtx.SolCli.GetRecentPrioritizationFees(l.ctx, feeAccount)
+		var feeFata []float64
+		for _, item := range out {
+			feeFata = append(feeFata, float64(item.PrioritizationFee))
+		}
+		_fee, _ := stats.Mean(feeFata)
+		fee = uint64(_fee) * 1_000_000
+	}
+	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().SetMicroLamports(fee).Build()
+
 	for _index, _account := range l.svcCtx.AddrList {
 		account := _account
 		index := _index
@@ -51,47 +55,63 @@ func (l *Producer) Miner() error {
 		fns = append(fns, func() error {
 
 			t := time.Now()
-			// global_xn_record_pda
-			globalXnRecordPda, _, err := solana.FindProgramAddress(
-				[][]byte{
-					[]byte("xn-miner-global"),
-					{uint8(kind)},
-				},
-				l.ProgramIdMiner[kind])
-			if err != nil {
-				return errorx.Wrap(err, "global_xn_record_pda")
-			}
-			// user_eth_xn_record_pda
 			var (
-				fromAddr string
+				err                error
+				globalXnRecordPda  solana.PublicKey
+				userEthXnRecordPda solana.PublicKey
+				userSolXnRecordPda solana.PublicKey
 			)
-			if common.IsHexAddress(l.svcCtx.Config.Sol.ToAddr) {
-				fromAddr = l.svcCtx.Config.Sol.ToAddr[2:]
-			}
-
-			userEthXnRecordPda, _, err := solana.FindProgramAddress(
-				[][]byte{
-					[]byte("xn-by-eth"),
-					common.FromHex(fromAddr),
-					{uint8(kind)},
-					l.ProgramIdMiner[kind].Bytes(),
+			mr.Finish(
+				func() error {
+					globalXnRecordPda, _, err = solana.FindProgramAddress(
+						[][]byte{
+							[]byte("xn-miner-global"),
+							{uint8(kind)},
+						},
+						l.ProgramIdMiner[kind])
+					if err != nil {
+						return errorx.Wrap(err, "global_xn_record_pda")
+					}
+					return nil
 				},
-				l.ProgramIdMiner[kind])
-			if err != nil {
-				return errorx.Wrap(err, "userEthXnRecordAccount")
-			}
+				func() error {
+					var (
+						fromAddr string
+					)
+					if common.IsHexAddress(l.svcCtx.Config.Sol.ToAddr) {
+						fromAddr = l.svcCtx.Config.Sol.ToAddr[2:]
+					}
 
-			userSolXnRecordPda, _, err := solana.FindProgramAddress(
-				[][]byte{
-					[]byte("xn-by-sol"),
-					account.PublicKey().Bytes(),
-					{uint8(kind)},
-					l.ProgramIdMiner[kind].Bytes(),
+					userEthXnRecordPda, _, err = solana.FindProgramAddress(
+						[][]byte{
+							[]byte("xn-by-eth"),
+							common.FromHex(fromAddr),
+							{uint8(kind)},
+							l.ProgramIdMiner[kind].Bytes(),
+						},
+						l.ProgramIdMiner[kind])
+					if err != nil {
+						return errorx.Wrap(err, "userEthXnRecordAccount")
+					}
+					return nil
 				},
-				l.ProgramIdMiner[kind])
-			if err != nil {
-				return errorx.Wrap(err, "global_xn_record_pda")
-			}
+				func() error {
+
+					userSolXnRecordPda, _, err = solana.FindProgramAddress(
+						[][]byte{
+							[]byte("xn-by-sol"),
+							account.PublicKey().Bytes(),
+							{uint8(kind)},
+							l.ProgramIdMiner[kind].Bytes(),
+						},
+						l.ProgramIdMiner[kind])
+					if err != nil {
+						return errorx.Wrap(err, "global_xn_record_pda")
+					}
+
+					return nil
+				},
+			)
 
 			mintToken := sol_xen_miner.NewMineHashesInstruction(
 				eth,
@@ -111,6 +131,7 @@ func (l *Producer) Miner() error {
 
 			recent, err := l.svcCtx.SolCli.GetLatestBlockhash(context.Background(), rpc.CommitmentFinalized)
 			rent := recent.Value.Blockhash
+
 			tx, err := solana.NewTransactionBuilder().
 				AddInstruction(feesInit).
 				AddInstruction(limit).
@@ -186,9 +207,9 @@ func (l *Producer) Miner() error {
 				return err
 			}
 
-			logx.Infof("account:%v slot:%v kind:%v hashs:%v superhashes:%v Points:%v t:%v",
-				// signature,
+			logx.Infof("account:%v fee:%v slot:%v kind:%v hashs:%v superhashes:%v Points:%v t:%v",
 				account.PublicKey(),
+				fee,
 				recent.Context.Slot,
 				index,
 				// common.Bytes2Hex(maybe_user_account_data_raw.Nonce[:]),
