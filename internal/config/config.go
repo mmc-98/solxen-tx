@@ -9,12 +9,12 @@ type Sol struct {
 	Url string
 	// TxnUrl    string
 	// GrpcUrl   string
-	Mnemonic   string
-	WalletPath string
-	Num        int
-	Fee        uint64
-	ToAddr     string
-	Time       int
+	Mnemonic string
+	// WalletPath string
+	Num    int
+	Fee    uint64
+	ToAddr string
+	Time   int
 	// ProgramIdMiner string
 	ProgramId string
 	HdPath    string

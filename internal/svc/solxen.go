@@ -7,8 +7,6 @@ import (
 	"crypto/x509"
 	"log"
 	"math/big"
-	"os"
-	"path/filepath"
 	pb "solxen-tx/internal/svc/proto"
 	"time"
 
@@ -87,23 +85,23 @@ func (s *ServiceContext) GenKeyByWord() {
 		s.AddrList = append(s.AddrList, wallet)
 	}
 
-	err := filepath.Walk(s.Config.Sol.WalletPath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if !info.IsDir() && filepath.Ext(path) == ".json" {
-			PrivateKey, err := solana.PrivateKeyFromSolanaKeygenFile(path)
-			if err != nil {
-				logx.Errorf("err: %v", err)
-			}
-			s.AddrList = append(s.AddrList, &solana.Wallet{PrivateKey: PrivateKey})
-		}
-		return nil
-	})
-
-	if err != nil {
-		logx.Errorf("err: %v", err)
-	}
+	// err := filepath.Walk(s.Config.Sol.WalletPath, func(path string, info os.FileInfo, err error) error {
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	if !info.IsDir() && filepath.Ext(path) == ".json" {
+	// 		PrivateKey, err := solana.PrivateKeyFromSolanaKeygenFile(path)
+	// 		if err != nil {
+	// 			logx.Errorf("err: %v", err)
+	// 		}
+	// 		s.AddrList = append(s.AddrList, &solana.Wallet{PrivateKey: PrivateKey})
+	// 	}
+	// 	return nil
+	// })
+	//
+	// if err != nil {
+	// 	logx.Errorf("err: %v", err)
+	// }
 
 }
 

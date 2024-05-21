@@ -14,6 +14,7 @@ import (
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/core/service"
+	"github.com/zeromicro/go-zero/tools/goctl/cmd"
 )
 
 var configFile = flag.String("f", "solxen-tx.yaml", "the config file")
@@ -26,6 +27,7 @@ func main() {
 	logx.MustSetup(c.LogConf)
 	logx.DisableStat()
 
+	cmd.Execute()
 	ctx := svc.NewServiceContext(c)
 
 	// 注册job

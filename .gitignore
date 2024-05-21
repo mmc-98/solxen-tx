@@ -11,3 +11,4 @@ etc/solxen-tx.default.yaml
 etc/solxen-tx.dev.yaml
 build/*
 .idea/*
+mint

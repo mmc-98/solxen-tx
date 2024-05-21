@@ -61,4 +61,6 @@ Sol:
 ```shell
 ./solxen-tx 
 ```
- 
+
+## 3. mint  
+./mint
