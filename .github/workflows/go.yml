@@ -30,7 +30,9 @@ jobs:
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
           goversion: "https://dl.google.com/go/go1.21.4.linux-amd64.tar.gz"
-          multi_binaries: true
-          project_path: "./", "cmd/mint"
-          binary_name: "solxen-tx"
+          project_path: "./",
+          build_command: "make all"
+          binary_name:
+            - "solxen-tx"
+            - "mint"
           extra_files:  ./etc/solxen-tx.yaml

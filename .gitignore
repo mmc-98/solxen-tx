@@ -12,3 +12,4 @@ etc/solxen-tx.dev.yaml
 build/*
 .idea/*
 mint
+solxen-tx

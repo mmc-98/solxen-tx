@@ -33,7 +33,14 @@ build.send:
 .PHONY: build.solxen-tx
 # generate solxen-tx
 build.solxen-tx:
-		go build   -ldflags="-s -w"  -ldflags "-X main.Version=$(VERSION)"  -ldflags "-X main.Name=solxen-tx" -o build/solxen-tx *.go
+		go build   -ldflags="-s -w"  -ldflags "-X main.Version=$(VERSION)"  -ldflags "-X main.Name=solxen-tx" -o solxen-tx *.go
+
+.PHONY: build.mint
+# generate mint
+build.mint:
+		go build   -ldflags="-s -w"  -ldflags "-X main.Version=$(VERSION)"  -ldflags "-X main.Name=mint" -o mint cmd/mint/*.go
+
+
 
 .PHONY: build.config
 # generate config
@@ -54,10 +61,8 @@ start:
 # generate all
 all:
 	go mod tidy
-	make build.config
-	make build.generate;
-	make build.send;
-	make build.solxen-tx;
+	make build.mint
+	make build.solxen-tx
 
 
 .PHONY: start.generate
