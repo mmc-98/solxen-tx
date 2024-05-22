@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"solxen-tx/cmd/airdrop"
+	"solxen-tx/cmd/miner"
 	minter "solxen-tx/cmd/mint"
-	miner "solxen-tx/cmd/solxen-tx"
 
 	"github.com/spf13/cobra"
 	"github.com/zeromicro/go-zero/tools/goctl/api/apigen"
