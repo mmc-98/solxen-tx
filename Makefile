@@ -48,12 +48,28 @@ build.config:
 		mkdir -p build
 		cp -rf etc  build
 
-.PHONY: start
+.PHONY: start.miner
 # generate solxen-tx
-start:
+start.miner:
 		#go build   -ldflags="-s -w"  -ldflags "-X main.Version=$(VERSION)"  -ldflags "-X main.Name=solxen-tx" -o build/solxen-tx *.go
 		go mod tidy
-		go run . -f build/etc/$(NAME).yaml
+		go run . miner -f build/etc/$(NAME).yaml
+
+
+.PHONY: start.minter
+# generate solxen-tx
+start.minter:
+		#go build   -ldflags="-s -w"  -ldflags "-X main.Version=$(VERSION)"  -ldflags "-X main.Name=solxen-tx" -o build/solxen-tx *.go
+		go mod tidy
+		go run . minter -f2 build/etc/$(NAME).yaml
+
+
+.PHONY: start.airdrop
+# generate solxen-tx
+start.airdrop:
+		#go build   -ldflags="-s -w"  -ldflags "-X main.Version=$(VERSION)"  -ldflags "-X main.Name=solxen-tx" -o build/solxen-tx *.go
+		go mod tidy
+		go run . airdrop -f3 build/etc/$(NAME).yaml
 
 
 

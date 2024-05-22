@@ -127,7 +127,7 @@ func (l *Producer) Mint() error {
 				SkipPreflight: false,
 			})
 			if err != nil {
-				return errorx.Wrap(err, "sig")
+				// return errorx.Wrap(err, "sig")
 			}
 			err = mr.Finish(
 				func() error {

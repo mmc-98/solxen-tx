@@ -211,7 +211,7 @@ func (l *Producer) Miner() error {
 				account.PublicKey(),
 				fee,
 				recent.Context.Slot,
-				index,
+				kind,
 				// common.Bytes2Hex(maybe_user_account_data_raw.Nonce[:]),
 				userAccountDataRaw.Hashes,
 				userAccountDataRaw.Superhashes,
