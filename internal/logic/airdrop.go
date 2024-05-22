@@ -19,7 +19,7 @@ func (l *Producer) Airdrop() {
 		if err != nil {
 			logx.Errorf("err :%v", err)
 		}
-		logx.Infof("account:%v airdrop transaction signature: %v", account.PublicKey(), out.String())
+		logx.Infof("signature: %v amount:%v account:%v    ", out.String(), account.PublicKey(), 100)
 		time.Sleep(1)
 	}
 

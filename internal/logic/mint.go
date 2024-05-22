@@ -127,16 +127,13 @@ func (l *Producer) Mint() error {
 				SkipPreflight: false,
 			})
 			if err != nil {
+				// logx.Errorf("accout:%v : no token info", account.PublicKey())
 				// return errorx.Wrap(err, "sig")
 			}
-			err = mr.Finish(
-				func() error {
-					err = l.svcCtx.SolCli.GetAccountDataInto(l.ctx, user_token_record_pda, &user_balance_data_raw)
-					return nil
-				},
-			)
+
+			err = l.svcCtx.SolCli.GetAccountDataInto(l.ctx, user_token_record_pda, &user_balance_data_raw)
 			if err != nil {
-				return err
+
 			}
 
 			logx.Infof("account:%v tokens:%v ",
