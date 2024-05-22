@@ -19,13 +19,14 @@ func (l *Producer) Airdrop() {
 		if err != nil {
 			logx.Errorf("err :%v", err)
 		}
+		balance, err := l.svcCtx.SolCli.GetBalance(l.ctx, account.PublicKey(), rpc.CommitmentConfirmed)
 
-		logx.Infof("signature: %v amount:%v account:%v    ", out.String(), account.PublicKey(), 100)
+		logx.Infof("signature: %v account:%v  amount:%v    before:%v", out.String(), account.PublicKey(), 100, balance.Value)
 		time.Sleep(1)
 	}
 
 	for _, accout := range l.svcCtx.AddrList {
-		balance, err := l.svcCtx.SolCli.GetBalance(l.ctx, accout.PublicKey(), rpc.CommitmentFinalized)
+		balance, err := l.svcCtx.SolCli.GetBalance(l.ctx, accout.PublicKey(), rpc.CommitmentConfirmed)
 		if err != nil {
 			return
 		}

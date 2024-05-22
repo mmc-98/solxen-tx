@@ -4,6 +4,7 @@ import (
 	"context"
 	"solxen-tx/internal/logic/generated/sol_xen_minter"
 
+	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	computebudget "github.com/gagliardetto/solana-go/programs/compute-budget"
 	"github.com/gagliardetto/solana-go/rpc"
@@ -131,15 +132,27 @@ func (l *Producer) Mint() error {
 				// return errorx.Wrap(err, "sig")
 			}
 
-			err = l.svcCtx.SolCli.GetAccountDataInto(l.ctx, user_token_record_pda, &user_balance_data_raw)
+			// err = l.svcCtx.SolCli.GetAccountDataInto(l.ctx, user_token_record_pda, &user_balance_data_raw)
+			// if err != nil {
+			//
+			// }
+			resp, err := l.svcCtx.SolCli.GetAccountInfoWithOpts(l.ctx, user_token_record_pda, &rpc.GetAccountInfoOpts{
+				Commitment: rpc.CommitmentConfirmed,
+			})
 			if err != nil {
-
+				// return err
+			} else {
+				err = bin.NewBinDecoder(resp.Value.Data.GetBinary()).Decode(&user_balance_data_raw)
+				if err != nil {
+					// return err
+				}
 			}
 
 			logx.Infof("account:%v tokens:%v ",
 				account.PublicKey(),
 				user_balance_data_raw.TokensMinted,
 			)
+
 			return nil
 
 		})
