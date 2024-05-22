@@ -1,7 +1,7 @@
 package main
 
 import (
-	cmd "solxen-tx/cmd/root"
+	cmd "solxen-tx/core/root"
 
 	"github.com/zeromicro/go-zero/core/load"
 	"github.com/zeromicro/go-zero/core/logx"
