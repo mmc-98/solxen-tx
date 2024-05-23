@@ -3,10 +3,10 @@ package root
 import (
 	"solxen-tx/cmd/airdrop"
 	"solxen-tx/cmd/miner"
+	"solxen-tx/cmd/balance"
 	minter "solxen-tx/cmd/mint"
 
 	"github.com/spf13/cobra"
-	"github.com/zeromicro/go-zero/tools/goctl/api/apigen"
 )
 
 var (
@@ -26,7 +26,7 @@ var (
 	Balance = &cobra.Command{
 		Use:   "balance",
 		Short: "balance",
-		RunE:  apigen.CreateApiTemplate,
+		RunE:  balance.Balance,
 	}
 	Airdrop = &cobra.Command{
 		Use:   "airdrop",
@@ -39,4 +39,5 @@ func init() {
 	Miner.Flags().StringVar(miner.ConfigFile, "f", "solxen-tx.yaml", "the config file")
 	Minter.Flags().StringVar(minter.ConfigFile, "f2", "solxen-tx.yaml", "the config file")
 	Airdrop.Flags().StringVar(airdrop.ConfigFile, "f3", "solxen-tx.yaml", "the config file")
+	Balance.Flags().StringVar(balance.ConfigFile, "f4", "solxen-tx.yaml", "the config file")
 }
