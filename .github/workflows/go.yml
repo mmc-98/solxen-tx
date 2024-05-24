@@ -33,3 +33,4 @@ jobs:
           project_path: "./"
           binary_name: "solxen-tx"
           extra_files:  ./etc/solxen-tx.yaml
+
