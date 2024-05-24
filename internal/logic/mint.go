@@ -163,5 +163,4 @@ func (l *Producer) Mint() error {
 		logx.Errorf("err: %v", err)
 	}
 	return nil
-
 }

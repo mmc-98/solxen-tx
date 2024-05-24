@@ -1,13 +1,14 @@
 package logic
 
 import (
+	"math/big"
+	"solxen-tx/internal/logic/generated/sol_xen_miner"
+	"solxen-tx/internal/logic/generated/sol_xen_minter"
+
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/zeromicro/go-zero/core/errorx"
 	"github.com/zeromicro/go-zero/core/logx"
-	"math/big"
-	"solxen-tx/internal/logic/generated/sol_xen_miner"
-	"solxen-tx/internal/logic/generated/sol_xen_minter"
 )
 
 func (l *Producer) Balance() error {
@@ -47,7 +48,7 @@ func (l *Producer) Balance() error {
 		)
 		if err != nil {
 			logx.Infof("failed to get account data: %v", err)
-			return err
+			// return err
 		}
 		// 打印账户余额和 tokens 信息
 		logx.Infof("account: %v  balance: %.7f SOL  points : %v   tokens: %v",
