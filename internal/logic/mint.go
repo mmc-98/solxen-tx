@@ -4,6 +4,7 @@ import (
 	"context"
 	"solxen-tx/internal/logic/generated/sol_xen_minter"
 
+	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	computebudget "github.com/gagliardetto/solana-go/programs/compute-budget"
 	"github.com/gagliardetto/solana-go/rpc"
@@ -15,9 +16,9 @@ import (
 func (l *Producer) Mint() error {
 
 	var (
-		fns            []func() error
-		programIdMiner = solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramIdMiner)
-		programId      = solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramId)
+		fns []func() error
+		// programIdMiner = solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramIdMiner)
+		programId = solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramId)
 	)
 
 	mint_pda, _, err := solana.FindProgramAddress(
@@ -34,18 +35,20 @@ func (l *Producer) Mint() error {
 	// limit := computebudget.NewSetComputeUnitLimitInstruction(1400000).Build()
 	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().SetMicroLamports(l.svcCtx.Config.Sol.Fee).Build()
 
-	for _, _account := range l.svcCtx.AddrList {
+	for _index, _account := range l.svcCtx.AddrList {
 		account := _account
+		index := _index
+		kind := index % 4
 		fns = append(fns, func() error {
 			// t := time.Now()
 			user_sol_xn_record_pda, _, err := solana.FindProgramAddress(
 				[][]byte{
 					[]byte("xn-by-sol"),
 					account.PublicKey().Bytes(),
-					[]uint8{0},
-					programIdMiner.Bytes(),
+					{uint8(kind)},
+					l.ProgramIdMiner[kind].Bytes(),
 				},
-				programIdMiner,
+				l.ProgramIdMiner[kind],
 			)
 			if err != nil {
 				return errorx.Wrap(err, "userSolXnRecordPda")
@@ -70,7 +73,7 @@ func (l *Producer) Mint() error {
 			// spew.Dump(user_token_account)
 
 			mintToken := sol_xen_minter.NewMintTokensInstruction(
-				0,
+				uint8(kind),
 				user_sol_xn_record_pda,
 				user_token_record_pda,
 				user_token_account,
@@ -79,18 +82,13 @@ func (l *Producer) Mint() error {
 				solana.TokenProgramID,
 				solana.SystemProgramID,
 				associate_token_program,
-				programIdMiner,
+				l.ProgramIdMiner[kind],
 			).Build()
 
-			sol_xen_minter.SetProgramID(solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramId))
+			// sol_xen_minter.SetProgramID(solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramId))
 
 			data, _ := mintToken.Data()
-			// spew.Dump(data)
-			// logx.Infof("data :%v", data)
-
-			instruction := solana.NewInstruction(mintToken.ProgramID(), mintToken.Accounts(), data)
-
-			// spew.Dump(instruction)
+			instruction := solana.NewInstruction(solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramId), mintToken.Accounts(), data)
 
 			signers := []solana.PrivateKey{account.PrivateKey}
 			recent, err := l.svcCtx.SolCli.GetLatestBlockhash(context.Background(), rpc.CommitmentFinalized)
@@ -130,22 +128,31 @@ func (l *Producer) Mint() error {
 				SkipPreflight: false,
 			})
 			if err != nil {
-				return errorx.Wrap(err, "sig")
+				// logx.Errorf("accout:%v : no token info", account.PublicKey())
+				// return errorx.Wrap(err, "sig")
 			}
-			err = mr.Finish(
-				func() error {
-					err = l.svcCtx.SolCli.GetAccountDataInto(l.ctx, user_token_record_pda, &user_balance_data_raw)
-					return nil
-				},
-			)
+
+			// err = l.svcCtx.SolCli.GetAccountDataInto(l.ctx, user_token_record_pda, &user_balance_data_raw)
+			// if err != nil {
+			//
+			// }
+			resp, err := l.svcCtx.SolCli.GetAccountInfoWithOpts(l.ctx, user_token_record_pda, &rpc.GetAccountInfoOpts{
+				Commitment: rpc.CommitmentConfirmed,
+			})
 			if err != nil {
-				return err
+				// return err
+			} else {
+				err = bin.NewBinDecoder(resp.Value.Data.GetBinary()).Decode(&user_balance_data_raw)
+				if err != nil {
+					// return err
+				}
 			}
 
 			logx.Infof("account:%v tokens:%v ",
 				account.PublicKey(),
 				user_balance_data_raw.TokensMinted,
 			)
+
 			return nil
 
 		})

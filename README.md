@@ -56,9 +56,40 @@ Sol:
 ```
  
 
-## 2. 运行 [Run]
+
+## 2. 运行miner [Run Miner]
 
 ```shell
-./solxen-tx 
+./solxen-tx miner
 ```
- 
+
+## 3. 运行 minter   [Run Minter]
+```shell
+./solxen-tx minter
+
+ ```
+
+
+## all cmd
+```shell
+  ./solxen-tx -h
+
+A cli tool solxen-tx
+
+Usage:
+  solxen-tx [command]
+
+Available Commands:
+  airdrop     airdrop
+  balance     balance
+  completion  Generate the autocompletion script for the specified shell
+  help        Help about any command
+  miner       miner
+  minter      minter
+
+Flags:
+  -h, --help      help for solxen-tx
+  -v, --version   version for solxen-tx
+
+
+ ```

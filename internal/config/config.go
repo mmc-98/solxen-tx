@@ -9,14 +9,15 @@ type Sol struct {
 	Url string
 	// TxnUrl    string
 	// GrpcUrl   string
-	Mnemonic       string
-	Num            int
-	Fee            uint64
-	ToAddr         string
-	Time           int
-	ProgramIdMiner string
-	ProgramId      string
-	HdPath         string
+	Mnemonic string
+	// WalletPath string
+	Num    int
+	Fee    uint64
+	ToAddr string
+	Time   int
+	// ProgramIdMiner string
+	ProgramId string
+	HdPath    string
 }
 type Config struct {
 	service.ServiceConf
