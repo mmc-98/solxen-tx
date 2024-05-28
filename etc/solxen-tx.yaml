@@ -4,11 +4,12 @@ LogConf:
   Encoding: plain
 Sol:
   HdPAth: m/44'/501'/0'/0'                                      # 钱包地址路径  [wallet derivation path]
-  Url: "http://45.250.254.197:8899"                             # rpc地址 [rpc address]
+  Url: "https://api.mainnet-beta.solana.com"                             # rpc地址 [rpc address]
   Mnemonic: ""                                                  # 助记词 [mnemonic phrase]
   Num: 1                                                        # 并发数 [concurrency]
   Fee: 3000                                                     # 优先级费用 [priority fee]
   ToAddr: "0x4A7766a5BD50DFAB5665d27eDfA25471b194E204"          # eth空投地址 [eth address for receiving xn airdrop]
-  ProgramID: "7Ltcx8X3twQnfYtmCs3C6PTUPhPcZkr1opEoxjFz4xDN"     # solxen合约地址 [solxen contract address]
+  ProgramID: "FmwhDsuBtK3DqFXYnZRfho4Qd2Mty1t4khvNrpPveNao"     # solxen合约地址 [solxen contract address]
+  # ProgramID: "3fpRvJQx7WP44ijejJrxAYexP71nC6R7xuysnNmpUP9o"     # solxen合约地址 [solxen contract address] # eat
   Time: 100                                                    # 间隔时间(单位毫秒) [interval time (milliseconds)]
 

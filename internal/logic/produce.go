@@ -27,10 +27,16 @@ func NewProducerLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Producer
 		all:    0,
 		mux:    sync.RWMutex{},
 		ProgramIdMiner: solana.PublicKeySlice{
-			solana.MustPublicKeyFromBase58("5i4ZPZujwASXGSYENhQEEijiU4EWBzobPAKzKUs87khw"),
-			solana.MustPublicKeyFromBase58("HbUSxXr4FKPShRyk813rHcXYnLkTwWEnhABe9gHJbe9Y"),
-			solana.MustPublicKeyFromBase58("FMjsA783PDyU7856mT1v44vh5FgrL2VAFR241NF5Zd1w"),
-			solana.MustPublicKeyFromBase58("6uxwCexinySFNP6fox9Zf48yhPTfAGYBw4j8QWQrCzmW"),
+			solana.MustPublicKeyFromBase58("HzkjK2uP2osHaNm5MrNsMWYWFpsh4WyVBwUD6V6ezbTQ"),
+			solana.MustPublicKeyFromBase58("R9NafUx9yS6HZzG5TSP61DyG6YwFMyniZAwsVPYPorK"),
+			solana.MustPublicKeyFromBase58("27kyMxWVXCiYJ29zff2evkMu6naoDGkt8DSfnwWBMsLL"),
+			solana.MustPublicKeyFromBase58("8GSbYKvNHx9fW7gTGQVTa8MT2euRnpniiwDC7XDPSA78"),
+
+			// eat ,,,
+			// solana.MustPublicKeyFromBase58("CFRDmC2xPN7K2D8GadHKpcwSAC5YvPzPjbjYA6v439oi"),
+			// solana.MustPublicKeyFromBase58("7vQ9pG7MUjkswNkL96XiiYbz3swM9dkqgMEAbgDaLggi"),
+			// solana.MustPublicKeyFromBase58("DpLx72BXVhZN6hkA6LKKres3EUKvK36mmh5JaKyaVSYU"),
+			// solana.MustPublicKeyFromBase58("7u5D7qPHGZHXQ3nQTeZu5eFKtKGKQWKhJCdM1B3T4Ly4"),
 		},
 	}
 }
