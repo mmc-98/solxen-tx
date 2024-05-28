@@ -27,10 +27,10 @@ func NewProducerLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Producer
 		all:    0,
 		mux:    sync.RWMutex{},
 		ProgramIdMiner: solana.PublicKeySlice{
-			solana.MustPublicKeyFromBase58("HzkjK2uP2osHaNm5MrNsMWYWFpsh4WyVBwUD6V6ezbTQ"),
-			solana.MustPublicKeyFromBase58("R9NafUx9yS6HZzG5TSP61DyG6YwFMyniZAwsVPYPorK"),
-			solana.MustPublicKeyFromBase58("27kyMxWVXCiYJ29zff2evkMu6naoDGkt8DSfnwWBMsLL"),
-			solana.MustPublicKeyFromBase58("8GSbYKvNHx9fW7gTGQVTa8MT2euRnpniiwDC7XDPSA78"),
+			solana.MustPublicKeyFromBase58("B8HwMYCk1o7EaJhooM4P43BHSk5M8zZHsTeJixqw7LMN"),
+			solana.MustPublicKeyFromBase58("2Ewuie2KnTvMLwGqKWvEM1S2gUStHzDUfrANdJfu45QJ"),
+			solana.MustPublicKeyFromBase58("5dxcK28nyAJdK9fSFuReRREeKnmAGVRpXPhwkZxAxFtJ"),
+			solana.MustPublicKeyFromBase58("DdVCjv7fsPPm64HnepYy5MBfh2bNfkd84Rawey9rdt5S"),
 
 			// eat ,,,
 			// solana.MustPublicKeyFromBase58("CFRDmC2xPN7K2D8GadHKpcwSAC5YvPzPjbjYA6v439oi"),
