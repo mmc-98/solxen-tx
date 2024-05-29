@@ -71,7 +71,12 @@ start.airdrop:
 		go mod tidy
 		go run . airdrop -f3 build/etc/$(NAME).yaml
 
-
+.PHONY: start.balance
+# generate solxen-tx
+start.balance:
+		#go build   -ldflags="-s -w"  -ldflags "-X main.Version=$(VERSION)"  -ldflags "-X main.Name=solxen-tx" -o build/solxen-tx *.go
+		go mod tidy
+		go run . balance -f4 build/etc/$(NAME).yaml
 
 .PHONY: all
 # generate all

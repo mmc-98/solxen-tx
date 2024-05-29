@@ -157,7 +157,6 @@ func (l *Producer) Miner() error {
 			if err != nil {
 				return errorx.Wrap(err, "Sign")
 			}
-
 			var (
 				userAccountDataRaw    sol_xen_miner.UserEthXnRecord
 				userSolAccountDataRaw sol_xen_miner.UserSolXnRecord
@@ -184,7 +183,7 @@ func (l *Producer) Miner() error {
 						&userAccountDataRaw,
 					)
 					if err != nil {
-						logx.Infof("userAccountDataRaw:%v", err)
+						// logx.Infof("userAccountDataRaw:%v", err)
 						return nil
 					}
 					return nil
@@ -197,7 +196,7 @@ func (l *Producer) Miner() error {
 						&userSolAccountDataRaw,
 					)
 					if err != nil {
-						logx.Infof("userSolAccountDataRaw:%v", err)
+						// logx.Infof("userSolAccountDataRaw:%v", err)
 						return nil
 					}
 					return nil
