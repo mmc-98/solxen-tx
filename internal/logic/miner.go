@@ -47,11 +47,15 @@ func (l *Producer) Miner() error {
 		fee = uint64(_fee) * 1_000_000
 	}
 	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().SetMicroLamports(fee).Build()
-
+	kind := l.svcCtx.Config.Sol.Kind
 	for _index, _account := range l.svcCtx.AddrList {
 		account := _account
 		index := _index
-		kind := index % 4
+
+		if kind == -1 {
+			kind = index % 4
+		}
+
 		fns = append(fns, func() error {
 
 			t := time.Now()
