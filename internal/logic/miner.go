@@ -51,10 +51,11 @@ func (l *Producer) Miner() error {
 	for _index, _account := range l.svcCtx.AddrList {
 		account := _account
 		index := _index
-		kind := l.svcCtx.Config.Sol.Kind
-		if kind == -1 {
-			kind = index % 4
-		}
+		kind := index % 4
+		// kind := l.svcCtx.Config.Sol.Kind
+		// if kind == -1 {
+		// 	kind = index % 4
+		// }
 
 		fns = append(fns, func() error {
 
