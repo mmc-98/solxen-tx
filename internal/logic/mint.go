@@ -39,6 +39,14 @@ func (l *Producer) Mint() error {
 		account := _account
 		index := _index
 		kind := index % 4
+
+		kind = l.svcCtx.Config.Sol.Kind
+		if kind == -1 {
+			kind = index % 4
+		} else {
+			account = l.svcCtx.AddrList[0]
+		}
+
 		fns = append(fns, func() error {
 			// t := time.Now()
 			user_sol_xn_record_pda, _, err := solana.FindProgramAddress(

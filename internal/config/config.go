@@ -18,7 +18,7 @@ type Sol struct {
 	// ProgramIdMiner string
 	ProgramId string
 	HdPath    string
-	// Kind      int
+	Kind      int
 }
 type Config struct {
 	service.ServiceConf
