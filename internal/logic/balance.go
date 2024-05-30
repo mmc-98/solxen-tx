@@ -1,10 +1,11 @@
 package logic
 
 import (
-	bin "github.com/gagliardetto/binary"
 	"math/big"
 	"solxen-tx/internal/logic/generated/sol_xen_miner"
 	"solxen-tx/internal/logic/generated/sol_xen_minter"
+
+	bin "github.com/gagliardetto/binary"
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
@@ -17,6 +18,14 @@ func (l *Producer) Balance() error {
 		account := _account
 		index := _index
 		kind := index % 4
+
+		kind = l.svcCtx.Config.Sol.Kind
+		if kind == -1 {
+			kind = index % 4
+		} else {
+			account = l.svcCtx.AddrList[0]
+		}
+
 		// 获取账户余额
 		balance, err := l.svcCtx.SolCli.GetBalance(l.ctx, account.PublicKey(), rpc.CommitmentConfirmed)
 		if err != nil {
@@ -29,7 +38,7 @@ func (l *Producer) Balance() error {
 			userSolXnRecordPda    solana.PublicKey
 			user_balance_data_raw sol_xen_minter.UserTokensRecord
 			userSolAccountDataRaw sol_xen_miner.UserSolXnRecord
-			programId = solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramId)
+			programId             = solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramId)
 		)
 		// 获取points，tokens
 		userSolXnRecordPda, _, err = solana.FindProgramAddress(
