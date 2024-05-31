@@ -12,7 +12,6 @@ import (
 	"github.com/gagliardetto/solana-go"
 	computebudget "github.com/gagliardetto/solana-go/programs/compute-budget"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/montanaflynn/stats"
 	"github.com/zeromicro/go-zero/core/errorx"
 	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/core/mr"
@@ -31,21 +30,21 @@ func (l *Producer) Miner() error {
 	eth.Address = uint8Array
 	eth.AddressStr = ethAccount.String()
 
-	out := make([]rpc.PriorizationFeeResult, 0)
-	feeAccount := []solana.PublicKey{
-		solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramId),
-	}
+	// out := make([]rpc.PriorizationFeeResult, 0)
+	// feeAccount := []solana.PublicKey{
+	// 	solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramId),
+	// }
 
-	fee := l.svcCtx.Config.Sol.Fee
-	if fee == 0 {
-		out, _ = l.svcCtx.SolCli.GetRecentPrioritizationFees(l.ctx, feeAccount)
-		var feeFata []float64
-		for _, item := range out {
-			feeFata = append(feeFata, float64(item.PrioritizationFee))
-		}
-		_fee, _ := stats.Mean(feeFata)
-		fee = uint64(_fee) * 1_000_000
-	}
+	// fee := l.svcCtx.Config.Sol.Fee
+	// if fee == 0 {
+	// 	out, _ = l.svcCtx.SolCli.GetRecentPrioritizationFees(l.ctx, feeAccount)
+	// 	var feeFata []float64
+	// 	for _, item := range out {
+	// 		feeFata = append(feeFata, float64(item.PrioritizationFee))
+	// 	}
+	// 	_fee, _ := stats.Mean(feeFata)
+	// 	fee = uint64(_fee) * 1_000_000
+	// }
 	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().SetMicroLamports(l.svcCtx.Config.Sol.Fee).Build()
 
 	for _index, _account := range l.svcCtx.AddrList {
@@ -216,7 +215,7 @@ func (l *Producer) Miner() error {
 
 			logx.Infof("account:%v fee:%v slot:%v kind:%v hashs:%v superhashes:%v Points:%v t:%v",
 				account.PublicKey(),
-				fee,
+				l.svcCtx.Config.Sol.Fee,
 				recent.Context.Slot,
 				kind,
 				// common.Bytes2Hex(maybe_user_account_data_raw.Nonce[:]),
