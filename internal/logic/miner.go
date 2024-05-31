@@ -46,7 +46,7 @@ func (l *Producer) Miner() error {
 		_fee, _ := stats.Mean(feeFata)
 		fee = uint64(_fee) * 1_000_000
 	}
-	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().SetMicroLamports(fee).Build()
+	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().SetMicroLamports(l.svcCtx.Config.Sol.Fee).Build()
 
 	for _index, _account := range l.svcCtx.AddrList {
 		account := _account
