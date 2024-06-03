@@ -176,12 +176,6 @@ func (l *Producer) Miner() error {
 
 			rand.Seed(time.Now().UnixNano())
 			n := rand.Intn(5-0+1) + 0
-			var rpcClient *rpc.Client
-			if l.svcCtx.Config.Sol.JitoTip != 0 {
-				rpcClient = rpc.New(JitoTxUrl[n])
-			} else {
-				rpcClient = l.svcCtx.SolCli
-			}
 
 			if l.svcCtx.Config.Sol.JitoTip != 0 {
 				type req struct {
@@ -252,6 +246,13 @@ func (l *Producer) Miner() error {
 				userSolAccountDataRaw sol_xen_miner.UserSolXnRecord
 				signature             solana.Signature
 			)
+			var rpcClient *rpc.Client
+			if l.svcCtx.Config.Sol.JitoTip != 0 {
+				rpcClient = rpc.New(JitoTxUrl[n])
+				time.Sleep(500 * time.Millisecond)
+			} else {
+				rpcClient = l.svcCtx.SolCli
+			}
 			err = mr.Finish(
 				func() error {
 
@@ -297,7 +298,7 @@ func (l *Producer) Miner() error {
 				return err
 			}
 
-			logx.Infof("account:%v fee:%v jito:%v slot:%v kind:%v hashs:%v superhashes:%v Points:%v t:%v url:%v",
+			logx.Infof("account:%v fee:%v jito:%v slot:%v kind:%v hashs:%v superhashes:%v Points:%v t:%v",
 				account.PublicKey(),
 				l.svcCtx.Config.Sol.Fee,
 				l.svcCtx.Config.Sol.JitoTip,
@@ -307,8 +308,7 @@ func (l *Producer) Miner() error {
 				userAccountDataRaw.Hashes,
 				userAccountDataRaw.Superhashes,
 				big.NewInt(0).Div(userSolAccountDataRaw.Points.BigInt(), big.NewInt(1_000_000_000)),
-				time.Since(t),
-				JitoTxUrl[n])
+				time.Since(t))
 
 			return nil
 
