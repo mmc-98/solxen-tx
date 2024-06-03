@@ -1,8 +1,12 @@
 package logic
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"math/big"
 	"time"
 
@@ -11,10 +15,16 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gagliardetto/solana-go"
 	computebudget "github.com/gagliardetto/solana-go/programs/compute-budget"
+	"github.com/gagliardetto/solana-go/programs/system"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/zeromicro/go-zero/core/errorx"
 	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/core/mr"
+)
+
+var (
+	JitoBundleUrl = "https://ny.mainnet.block-engine.jito.wtf/api/v1/bundles"
+	JitoTxUrl     = "https://ny.mainnet.block-engine.jito.wtf/api/v1/transactions"
 )
 
 func (l *Producer) Miner() error {
@@ -142,19 +152,68 @@ func (l *Producer) Miner() error {
 			}
 			rent := recent.Value.Blockhash
 
-			tx, err := solana.NewTransactionBuilder().
-				AddInstruction(feesInit).
+			tx := solana.NewTransactionBuilder().
+				// AddInstruction(feesInit).
 				AddInstruction(limit).
 				AddInstruction(instruction).
 				SetRecentBlockHash(rent).
-				SetFeePayer(account.PublicKey()).
-				Build()
+				SetFeePayer(account.PublicKey())
 			if err != nil {
 				return errorx.Wrap(err, "tx")
 			}
 
+			if l.svcCtx.Config.Sol.JitoTip != 0 {
+				type req struct {
+					Jsonrpc string `json:"jsonrpc"`
+					Id      int64  `json:"id"`
+					Method  string `json:"method"`
+					Params  string `json:"params"`
+				}
+
+				type resp struct {
+					Jsonrpc string   `json:"jsonrpc"`
+					Result  []string `json:"result"`
+					Id      int64    `json:"id"`
+				}
+				// reqData, err := json.Marshal(req{Jsonrpc: "2.0", Id: 1, Method: "getTipAccounts", Params: ""})
+				reqData, err := json.Marshal(&req{Jsonrpc: "2.0", Id: 1, Method: "getTipAccounts", Params: ""})
+				if err != nil {
+					log.Fatal(err)
+				}
+				respData, err := l.svcCtx.HTTPClient.Post(JitoBundleUrl,
+					"application/json",
+					bytes.NewBuffer(reqData))
+				if err != nil {
+					return errorx.Wrap(err, "HTTPClient.")
+				}
+				defer respData.Body.Close()
+				BodyData, err := ioutil.ReadAll(respData.Body)
+				if err != nil {
+					log.Fatal(err)
+				}
+				respd := resp{}
+				err = json.Unmarshal(BodyData, &respd)
+				if err != nil {
+					return errorx.Wrap(err, "HTTPClient.")
+				}
+				if len(respd.Result) == 0 {
+					return nil
+				}
+				// logx.Infof("JitoBundleUrl:%v", respd)
+				accountTo := solana.MustPublicKeyFromBase58(respd.Result[0])
+				transferInstruction := system.NewTransferInstruction(
+					l.svcCtx.Config.Sol.JitoTip,
+					account.PublicKey(),
+					accountTo,
+				).Build()
+				tx.AddInstruction(transferInstruction)
+			} else {
+				tx.AddInstruction(feesInit)
+			}
+			txData, err := tx.Build()
+
 			signers := []solana.PrivateKey{account.PrivateKey}
-			_, err = tx.Sign(
+			_, err = txData.Sign(
 				func(key solana.PublicKey) *solana.PrivateKey {
 					for _, signer := range signers {
 						if signer.PublicKey().Equals(key) {
@@ -174,7 +233,13 @@ func (l *Producer) Miner() error {
 			)
 			err = mr.Finish(
 				func() error {
-					signature, err = l.svcCtx.SolCli.SendTransactionWithOpts(context.TODO(), tx, rpc.TransactionOpts{
+					var rpcClient *rpc.Client
+					if l.svcCtx.Config.Sol.JitoTip != 0 {
+						rpcClient = rpc.New(JitoTxUrl)
+					} else {
+						rpcClient = l.svcCtx.SolCli
+					}
+					signature, err = rpcClient.SendTransactionWithOpts(context.TODO(), txData, rpc.TransactionOpts{
 						SkipPreflight: false,
 						MaxRetries:    new(uint),
 					})

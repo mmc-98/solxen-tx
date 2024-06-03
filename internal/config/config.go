@@ -19,6 +19,7 @@ type Sol struct {
 	ProgramId string
 	HdPath    string
 	Kind      int
+	JitoTip   uint64
 }
 type Config struct {
 	service.ServiceConf
