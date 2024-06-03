@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"math/big"
+	"math/rand"
 	"time"
 
 	"solxen-tx/internal/logic/generated/sol_xen_miner"
@@ -23,8 +24,19 @@ import (
 )
 
 var (
-	JitoBundleUrl = "https://ny.mainnet.block-engine.jito.wtf/api/v1/bundles"
-	JitoTxUrl     = "https://ny.mainnet.block-engine.jito.wtf/api/v1/transactions"
+	JitoBundleUrl = []string{"https://ny.mainnet.block-engine.jito.wtf/api/v1/bundles",
+		"https://mainnet.block-engine.jito.wtf/api/v1/bundles",
+		"https://amsterdam.mainnet.block-engine.jito.wtf/api/v1/bundles",
+		"https://frankfurt.mainnet.block-engine.jito.wtf/api/v1/bundles",
+		"https://ny.mainnet.block-engine.jito.wtf/api/v1/bundles",
+		"https://tokyo.mainnet.block-engine.jito.wtf/api/v1/bundles"}
+	JitoTxUrl = []string{"https://ny.mainnet.block-engine.jito.wtf/api/v1/transactions",
+		"https://mainnet.block-engine.jito.wtf/api/v1/transactions",
+		"https://amsterdam.mainnet.block-engine.jito.wtf/api/v1/transactions",
+		"https://frankfurt.mainnet.block-engine.jito.wtf/api/v1/transactions",
+		"https://ny.mainnet.block-engine.jito.wtf/api/v1/transactions",
+		"https://tokyo.mainnet.block-engine.jito.wtf/api/v1/transactions",
+	}
 )
 
 func (l *Producer) Miner() error {
@@ -162,6 +174,15 @@ func (l *Producer) Miner() error {
 				return errorx.Wrap(err, "tx")
 			}
 
+			rand.Seed(time.Now().UnixNano())
+			n := rand.Intn(5-0+1) + 0
+			var rpcClient *rpc.Client
+			if l.svcCtx.Config.Sol.JitoTip != 0 {
+				rpcClient = rpc.New(JitoTxUrl[n])
+			} else {
+				rpcClient = l.svcCtx.SolCli
+			}
+
 			if l.svcCtx.Config.Sol.JitoTip != 0 {
 				type req struct {
 					Jsonrpc string `json:"jsonrpc"`
@@ -180,7 +201,7 @@ func (l *Producer) Miner() error {
 				if err != nil {
 					log.Fatal(err)
 				}
-				respData, err := l.svcCtx.HTTPClient.Post(JitoBundleUrl,
+				respData, err := l.svcCtx.HTTPClient.Post(JitoBundleUrl[n],
 					"application/json",
 					bytes.NewBuffer(reqData))
 				if err != nil {
@@ -233,12 +254,7 @@ func (l *Producer) Miner() error {
 			)
 			err = mr.Finish(
 				func() error {
-					var rpcClient *rpc.Client
-					if l.svcCtx.Config.Sol.JitoTip != 0 {
-						rpcClient = rpc.New(JitoTxUrl)
-					} else {
-						rpcClient = l.svcCtx.SolCli
-					}
+
 					signature, err = rpcClient.SendTransactionWithOpts(context.TODO(), txData, rpc.TransactionOpts{
 						SkipPreflight: false,
 						MaxRetries:    new(uint),
@@ -281,16 +297,18 @@ func (l *Producer) Miner() error {
 				return err
 			}
 
-			logx.Infof("account:%v fee:%v slot:%v kind:%v hashs:%v superhashes:%v Points:%v t:%v",
+			logx.Infof("account:%v fee:%v jito:%v slot:%v kind:%v hashs:%v superhashes:%v Points:%v t:%v url:%v",
 				account.PublicKey(),
 				l.svcCtx.Config.Sol.Fee,
+				l.svcCtx.Config.Sol.JitoTip,
 				recent.Context.Slot,
 				kind,
 				// common.Bytes2Hex(maybe_user_account_data_raw.Nonce[:]),
 				userAccountDataRaw.Hashes,
 				userAccountDataRaw.Superhashes,
 				big.NewInt(0).Div(userSolAccountDataRaw.Points.BigInt(), big.NewInt(1_000_000_000)),
-				time.Since(t))
+				time.Since(t),
+				JitoTxUrl[n])
 
 			return nil
 
