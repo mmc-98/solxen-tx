@@ -1,14 +1,9 @@
 package logic
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"math/big"
-	"math/rand"
 	"time"
 
 	"solxen-tx/internal/logic/generated/sol_xen_miner"
@@ -24,19 +19,18 @@ import (
 )
 
 var (
-	JitoBundleUrl = []string{"https://ny.mainnet.block-engine.jito.wtf/api/v1/bundles",
-		"https://mainnet.block-engine.jito.wtf/api/v1/bundles",
-		"https://amsterdam.mainnet.block-engine.jito.wtf/api/v1/bundles",
-		"https://frankfurt.mainnet.block-engine.jito.wtf/api/v1/bundles",
-		"https://ny.mainnet.block-engine.jito.wtf/api/v1/bundles",
-		"https://tokyo.mainnet.block-engine.jito.wtf/api/v1/bundles"}
-	JitoTxUrl = []string{"https://ny.mainnet.block-engine.jito.wtf/api/v1/transactions",
-		"https://mainnet.block-engine.jito.wtf/api/v1/transactions",
-		"https://amsterdam.mainnet.block-engine.jito.wtf/api/v1/transactions",
-		"https://frankfurt.mainnet.block-engine.jito.wtf/api/v1/transactions",
-		"https://ny.mainnet.block-engine.jito.wtf/api/v1/transactions",
-		"https://tokyo.mainnet.block-engine.jito.wtf/api/v1/transactions",
-	}
+	JitoBundleUrl = []string{"https://ny.mainnet.block-engine.jito.wtf/api/v1/bundles"} // "https://mainnet.block-engine.jito.wtf/api/v1/bundles",
+	// "https://amsterdam.mainnet.block-engine.jito.wtf/api/v1/bundles",
+	// "https://frankfurt.mainnet.block-engine.jito.wtf/api/v1/bundles",
+	// "https://ny.mainnet.block-engine.jito.wtf/api/v1/bundles",
+	// "https://tokyo.mainnet.block-engine.jito.wtf/api/v1/bundles",
+
+	JitoTxUrl = []string{"https://ny.mainnet.block-engine.jito.wtf/api/v1/transactions"} // "https://mainnet.block-engine.jito.wtf/api/v1/transactions",
+	// "https://amsterdam.mainnet.block-engine.jito.wtf/api/v1/transactions",
+	// "https://frankfurt.mainnet.block-engine.jito.wtf/api/v1/transactions",
+	// "https://ny.mainnet.block-engine.jito.wtf/api/v1/transactions",
+	// "https://tokyo.mainnet.block-engine.jito.wtf/api/v1/transactions",
+
 )
 
 func (l *Producer) Miner() error {
@@ -173,49 +167,24 @@ func (l *Producer) Miner() error {
 			if err != nil {
 				return errorx.Wrap(err, "tx")
 			}
-
-			rand.Seed(time.Now().UnixNano())
-			n := rand.Intn(5-0+1) + 0
-
+			//
+			// rand.Seed(time.Now().UnixNano())
+			// n := rand.Intn(5-0+1) + 0
+			var rpcClient *rpc.Client
 			if l.svcCtx.Config.Sol.JitoTip != 0 {
-				type req struct {
-					Jsonrpc string `json:"jsonrpc"`
-					Id      int64  `json:"id"`
-					Method  string `json:"method"`
-					Params  string `json:"params"`
-				}
 
-				type resp struct {
-					Jsonrpc string   `json:"jsonrpc"`
-					Result  []string `json:"result"`
-					Id      int64    `json:"id"`
-				}
-				// reqData, err := json.Marshal(req{Jsonrpc: "2.0", Id: 1, Method: "getTipAccounts", Params: ""})
-				reqData, err := json.Marshal(&req{Jsonrpc: "2.0", Id: 1, Method: "getTipAccounts", Params: ""})
-				if err != nil {
-					log.Fatal(err)
-				}
-				respData, err := l.svcCtx.HTTPClient.Post(JitoBundleUrl[n],
-					"application/json",
-					bytes.NewBuffer(reqData))
-				if err != nil {
-					return errorx.Wrap(err, "HTTPClient.")
-				}
-				defer respData.Body.Close()
-				BodyData, err := ioutil.ReadAll(respData.Body)
-				if err != nil {
-					log.Fatal(err)
-				}
-				respd := resp{}
-				err = json.Unmarshal(BodyData, &respd)
-				if err != nil {
-					return errorx.Wrap(err, "HTTPClient.")
-				}
-				if len(respd.Result) == 0 {
+				rpcClient = rpc.New(JitoTxUrl[0])
+				// time.Sleep(1000 * time.Millisecond)
+
+				if len(l.Respd.Result) == 0 {
+					err := l.GenJitoAddr()
+					if err != nil {
+						return err
+					}
 					return nil
 				}
 				// logx.Infof("JitoBundleUrl:%v", respd)
-				accountTo := solana.MustPublicKeyFromBase58(respd.Result[0])
+				accountTo := solana.MustPublicKeyFromBase58(l.Respd.Result[0])
 				transferInstruction := system.NewTransferInstruction(
 					l.svcCtx.Config.Sol.JitoTip,
 					account.PublicKey(),
@@ -224,6 +193,7 @@ func (l *Producer) Miner() error {
 				tx.AddInstruction(transferInstruction)
 			} else {
 				tx.AddInstruction(feesInit)
+				rpcClient = l.svcCtx.SolCli
 			}
 			txData, err := tx.Build()
 
@@ -246,16 +216,8 @@ func (l *Producer) Miner() error {
 				userSolAccountDataRaw sol_xen_miner.UserSolXnRecord
 				signature             solana.Signature
 			)
-			var rpcClient *rpc.Client
-			if l.svcCtx.Config.Sol.JitoTip != 0 {
-				rpcClient = rpc.New(JitoTxUrl[n])
-				time.Sleep(500 * time.Millisecond)
-			} else {
-				rpcClient = l.svcCtx.SolCli
-			}
 			err = mr.Finish(
 				func() error {
-
 					signature, err = rpcClient.SendTransactionWithOpts(context.TODO(), txData, rpc.TransactionOpts{
 						SkipPreflight: false,
 						MaxRetries:    new(uint),

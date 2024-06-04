@@ -1,14 +1,25 @@
 package logic
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"io/ioutil"
+	"log"
 	"solxen-tx/internal/svc"
 	"sync"
 	"time"
 
 	"github.com/gagliardetto/solana-go"
+	"github.com/zeromicro/go-zero/core/errorx"
 	"github.com/zeromicro/go-zero/core/logx"
 )
+
+type resp struct {
+	Jsonrpc string   `json:"jsonrpc"`
+	Result  []string `json:"result"`
+	Id      int64    `json:"id"`
+}
 
 type Producer struct {
 	ctx    context.Context
@@ -17,14 +28,15 @@ type Producer struct {
 	all            int
 	mux            sync.RWMutex
 	ProgramIdMiner solana.PublicKeySlice
+	Respd          *resp
 }
 
 func NewProducerLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Producer {
-	return &Producer{
+
+	s := &Producer{
 		ctx:    ctx,
 		svcCtx: svcCtx,
 		Logger: logx.WithContext(ctx),
-		all:    0,
 		mux:    sync.RWMutex{},
 		ProgramIdMiner: solana.PublicKeySlice{
 			solana.MustPublicKeyFromBase58("B8HwMYCk1o7EaJhooM4P43BHSk5M8zZHsTeJixqw7LMN"),
@@ -38,7 +50,47 @@ func NewProducerLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Producer
 			// solana.MustPublicKeyFromBase58("DpLx72BXVhZN6hkA6LKKres3EUKvK36mmh5JaKyaVSYU"),
 			// solana.MustPublicKeyFromBase58("7u5D7qPHGZHXQ3nQTeZu5eFKtKGKQWKhJCdM1B3T4Ly4"),
 		},
+		Respd: &resp{},
 	}
+	s.GenJitoAddr()
+	return s
+}
+
+func (l *Producer) GenJitoAddr() error {
+	type req struct {
+		Jsonrpc string `json:"jsonrpc"`
+		Id      int64  `json:"id"`
+		Method  string `json:"method"`
+		Params  string `json:"params"`
+	}
+
+	// reqData, err := json.Marshal(req{Jsonrpc: "2.0", Id: 1, Method: "getTipAccounts", Params: ""})
+	reqData, err := json.Marshal(&req{Jsonrpc: "2.0", Id: 1, Method: "getTipAccounts", Params: ""})
+	if err != nil {
+		log.Fatal(err)
+	}
+	respData, err := l.svcCtx.HTTPClient.Post(
+		JitoBundleUrl[0],
+		"application/json",
+		bytes.NewBuffer(reqData))
+	if err != nil {
+		return errorx.Wrap(err, "HTTPClient.")
+	}
+	defer respData.Body.Close()
+	BodyData, err := ioutil.ReadAll(respData.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = json.Unmarshal(BodyData, &l.Respd)
+	if err != nil {
+		return errorx.Wrap(err, "HTTPClient.")
+	}
+	// if len(respd.Result) == 0 {
+	// 	return nil
+	// }
+
+	return nil
 }
 
 func (l *Producer) Start() {
