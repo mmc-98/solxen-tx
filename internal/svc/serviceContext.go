@@ -36,7 +36,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		Lock:     sync.RWMutex{},
 		AddrList: make([]*solana.Wallet, 0),
 		SolCli:   rpc.New(c.Sol.Url),
-		// TxnCli:    rpc.New(c.Sol.TxnUrl),
+		TxnCli:   rpc.New(c.Sol.TxnUrl),
 		// GrpcCli:   NewGrpcCli(c.Sol.GrpcUrl, true),
 		Blockhash:  make(chan solana.Hash, 10),
 		HTTPClient: newHTTP(),
