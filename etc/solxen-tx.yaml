@@ -11,6 +11,6 @@ Sol:
   JitoTip: 1
   Kind: -1
   ToAddr: "0x405113f4376A7769E61e82c5cdA16c80Cc9c0bd8"          # eth空投地址 [eth address for receiving xn airdrop]
-  ProgramID: "5tungisGgk1fmGXxacNT1NkPtZgRwJnJPVMK5kfHqx2m"     # solxen合约地址 [solxen contract address]
+  ProgramID: "EPAdVJ5S317jJr2ejgxoA52iptvphGXjPLbqXhZH4n8o"     # solxen合约地址 [solxen contract address]
   Time: 1000                                                    # 间隔时间(单位毫秒) [interval time (milliseconds)]
 
