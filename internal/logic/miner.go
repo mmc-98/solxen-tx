@@ -218,9 +218,9 @@ func (l *Producer) Miner() error {
 			)
 			err = mr.Finish(
 				func() error {
-					// signature, err = rpcClient.SendTransactionWithOpts(context.TODO(), txData, rpc.TransactionOpts{
-					_ = rpcClient
-					signature, err = l.svcCtx.TxnCli.SendTransactionWithOpts(context.TODO(), txData, rpc.TransactionOpts{
+					signature, err = rpcClient.SendTransactionWithOpts(context.TODO(), txData, rpc.TransactionOpts{
+						// _ = rpcClient
+						// signature, err = l.svcCtx.TxnCli.SendTransactionWithOpts(context.TODO(), txData, rpc.TransactionOpts{
 						SkipPreflight: true,
 						MaxRetries:    new(uint),
 					})

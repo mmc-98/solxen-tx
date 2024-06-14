@@ -6,8 +6,8 @@ import (
 )
 
 type Sol struct {
-	Url    string
-	TxnUrl string
+	Url string
+	// TxnUrl string
 	// GrpcUrl   string
 	Mnemonic string
 	// WalletPath string
