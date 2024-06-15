@@ -99,7 +99,7 @@ func (l *Producer) Mint() error {
 			instruction := solana.NewInstruction(solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramId), mintToken.Accounts(), data)
 
 			signers := []solana.PrivateKey{account.PrivateKey}
-			recent, err := l.svcCtx.SolCli.GetLatestBlockhash(context.Background(), rpc.CommitmentFinalized)
+			recent, err := l.svcCtx.SolReadCli.GetLatestBlockhash(context.Background(), rpc.CommitmentFinalized)
 			rent := recent.Value.Blockhash
 			tx, err := solana.NewTransactionBuilder().
 				AddInstruction(feesInit).
@@ -132,7 +132,7 @@ func (l *Producer) Mint() error {
 				user_balance_data_raw sol_xen_minter.UserTokensRecord
 			)
 
-			_, err = l.svcCtx.SolCli.SendTransactionWithOpts(context.Background(), tx, rpc.TransactionOpts{
+			_, err = l.svcCtx.SolWriteCli.SendTransactionWithOpts(context.Background(), tx, rpc.TransactionOpts{
 				SkipPreflight: false,
 			})
 			if err != nil {
@@ -144,7 +144,7 @@ func (l *Producer) Mint() error {
 			// if err != nil {
 			//
 			// }
-			resp, err := l.svcCtx.SolCli.GetAccountInfoWithOpts(l.ctx, user_token_record_pda, &rpc.GetAccountInfoOpts{
+			resp, err := l.svcCtx.SolReadCli.GetAccountInfoWithOpts(l.ctx, user_token_record_pda, &rpc.GetAccountInfoOpts{
 				Commitment: rpc.CommitmentConfirmed,
 			})
 			if err != nil {

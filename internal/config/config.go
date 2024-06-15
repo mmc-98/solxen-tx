@@ -35,9 +35,9 @@ type Config struct {
 	// // 	Topic   string
 	// // }
 	// DqConf dq.DqConf
-	LogConf logx.LogConf
-	Sol     Sol
-
+	LogConf    logx.LogConf
+	Sol        Sol
+	HttpProxys []string `json:",optional"`
 	// Vault struct {
 	// 	Address *vault.Config
 	// 	Token   string

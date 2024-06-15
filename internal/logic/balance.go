@@ -27,7 +27,7 @@ func (l *Producer) Balance() error {
 		}
 
 		// 获取账户余额
-		balance, err := l.svcCtx.SolCli.GetBalance(l.ctx, account.PublicKey(), rpc.CommitmentConfirmed)
+		balance, err := l.svcCtx.SolReadCli.GetBalance(l.ctx, account.PublicKey(), rpc.CommitmentConfirmed)
 		if err != nil {
 			logx.Errorf("failed to get balance for account %v: %v", account.PublicKey(), err)
 			continue
@@ -63,12 +63,12 @@ func (l *Producer) Balance() error {
 			return errorx.Wrap(err, "user_eth_xn_record_pda")
 		}
 
-		err = l.svcCtx.SolCli.GetAccountDataInto(
+		err = l.svcCtx.SolReadCli.GetAccountDataInto(
 			l.ctx,
 			userSolXnRecordPda,
 			&userSolAccountDataRaw,
 		)
-		resp, err := l.svcCtx.SolCli.GetAccountInfoWithOpts(l.ctx, user_token_record_pda, &rpc.GetAccountInfoOpts{
+		resp, err := l.svcCtx.SolReadCli.GetAccountInfoWithOpts(l.ctx, user_token_record_pda, &rpc.GetAccountInfoOpts{
 			Commitment: rpc.CommitmentConfirmed,
 		})
 		if err != nil {

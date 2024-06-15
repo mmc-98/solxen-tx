@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"math/rand"
+	httpclient "solxen-tx/pkg/http"
 	"time"
 
 	"solxen-tx/internal/logic/generated/sol_xen_miner"
@@ -33,6 +35,19 @@ var (
 
 )
 
+func (l *Producer) GetProxyAddr() string {
+
+	if len(l.svcCtx.Config.HttpProxys) == 0 {
+		return ""
+	}
+	rand.Seed(time.Now().UnixNano())
+	index := rand.Intn(len(l.svcCtx.Config.HttpProxys))
+	httpProxy := l.svcCtx.Config.HttpProxys[index]
+	// logx.Infof("proxy:%v", fmt.Sprintf("http://%v", httpProxy))
+	return fmt.Sprintf("http://%v", httpProxy)
+
+}
+
 func (l *Producer) Miner() error {
 
 	var (
@@ -46,21 +61,6 @@ func (l *Producer) Miner() error {
 	eth.Address = uint8Array
 	eth.AddressStr = ethAccount.String()
 
-	// out := make([]rpc.PriorizationFeeResult, 0)
-	// feeAccount := []solana.PublicKey{
-	// 	solana.MustPublicKeyFromBase58(l.svcCtx.Config.Sol.ProgramId),
-	// }
-
-	// fee := l.svcCtx.Config.Sol.Fee
-	// if fee == 0 {
-	// 	out, _ = l.svcCtx.SolCli.GetRecentPrioritizationFees(l.ctx, feeAccount)
-	// 	var feeFata []float64
-	// 	for _, item := range out {
-	// 		feeFata = append(feeFata, float64(item.PrioritizationFee))
-	// 	}
-	// 	_fee, _ := stats.Mean(feeFata)
-	// 	fee = uint64(_fee) * 1_000_000
-	// }
 	feesInit := computebudget.NewSetComputeUnitPriceInstructionBuilder().SetMicroLamports(l.svcCtx.Config.Sol.Fee).Build()
 
 	for _index, _account := range l.svcCtx.AddrList {
@@ -119,7 +119,6 @@ func (l *Producer) Miner() error {
 					return nil
 				},
 				func() error {
-
 					userSolXnRecordPda, _, err = solana.FindProgramAddress(
 						[][]byte{
 							[]byte("xn-by-sol"),
@@ -152,7 +151,12 @@ func (l *Producer) Miner() error {
 			instruction := solana.NewInstruction(l.ProgramIdMiner[kind], mintToken.Accounts(), data)
 			// l.svcCtx.Lock.Unlock()
 
-			recent, err := l.svcCtx.SolCli.GetLatestBlockhash(context.Background(), rpc.CommitmentFinalized)
+			proxyUrl := l.GetProxyAddr()
+			if proxyUrl != "" {
+				l.svcCtx.SolWriteCli = httpclient.NewWithProxy(l.svcCtx.Config.Sol.Url, proxyUrl)
+			}
+
+			recent, err := l.svcCtx.SolReadCli.GetLatestBlockhash(context.Background(), rpc.CommitmentFinalized)
 			if err != nil {
 				return errorx.Wrap(err, "network.")
 			}
@@ -170,10 +174,15 @@ func (l *Producer) Miner() error {
 			//
 			// rand.Seed(time.Now().UnixNano())
 			// n := rand.Intn(5-0+1) + 0
-			var rpcClient *rpc.Client
+			// var rpcClient *rpc.Client
 			if l.svcCtx.Config.Sol.JitoTip != 0 {
+				// proxyUrl := l.GetProxyAddr()
+				if proxyUrl != "" {
+					l.svcCtx.SolWriteCli = httpclient.NewWithProxy(JitoTxUrl[0], proxyUrl)
+				} else {
+					l.svcCtx.SolWriteCli = rpc.New(JitoTxUrl[0])
+				}
 
-				rpcClient = rpc.New(JitoTxUrl[0])
 				// time.Sleep(1000 * time.Millisecond)
 
 				if len(l.Respd.Result) == 0 {
@@ -193,7 +202,7 @@ func (l *Producer) Miner() error {
 				tx.AddInstruction(transferInstruction)
 			} else {
 				tx.AddInstruction(feesInit)
-				rpcClient = l.svcCtx.SolCli
+				// rpcClient = l.svcCtx.SolCli
 			}
 			txData, err := tx.Build()
 
@@ -218,7 +227,7 @@ func (l *Producer) Miner() error {
 			)
 			err = mr.Finish(
 				func() error {
-					signature, err = rpcClient.SendTransactionWithOpts(context.TODO(), txData, rpc.TransactionOpts{
+					signature, err = l.svcCtx.SolWriteCli.SendTransactionWithOpts(context.TODO(), txData, rpc.TransactionOpts{
 						// _ = rpcClient
 						// signature, err = l.svcCtx.TxnCli.SendTransactionWithOpts(context.TODO(), txData, rpc.TransactionOpts{
 						SkipPreflight: true,
@@ -233,7 +242,7 @@ func (l *Producer) Miner() error {
 				},
 
 				func() error {
-					err = l.svcCtx.SolCli.GetAccountDataInto(
+					err = l.svcCtx.SolReadCli.GetAccountDataInto(
 						l.ctx,
 						userEthXnRecordPda,
 						&userAccountDataRaw,
@@ -246,7 +255,7 @@ func (l *Producer) Miner() error {
 				},
 
 				func() error {
-					err = l.svcCtx.SolCli.GetAccountDataInto(
+					err = l.svcCtx.SolReadCli.GetAccountDataInto(
 						l.ctx,
 						userSolXnRecordPda,
 						&userSolAccountDataRaw,
@@ -262,7 +271,7 @@ func (l *Producer) Miner() error {
 				return err
 			}
 
-			logx.Infof("account:%v fee:%v jito:%v slot:%v kind:%v hashs:%v superhashes:%v Points:%v t:%v",
+			logx.Infof("account:%v fee:%v jito:%v slot:%v kind:%v hashs:%v superhashes:%v Points:%v proxy:%v t:%v",
 				account.PublicKey(),
 				l.svcCtx.Config.Sol.Fee,
 				l.svcCtx.Config.Sol.JitoTip,
@@ -272,6 +281,7 @@ func (l *Producer) Miner() error {
 				userAccountDataRaw.Hashes,
 				userAccountDataRaw.Superhashes,
 				big.NewInt(0).Div(userSolAccountDataRaw.Points.BigInt(), big.NewInt(1_000_000_000)),
+				proxyUrl,
 				time.Since(t))
 
 			return nil
@@ -293,7 +303,7 @@ func (l *Producer) CheckAddressBalance() error {
 	)
 	for _, addr := range l.svcCtx.AddrList {
 		fns = append(fns, func() error {
-			balance, err := l.svcCtx.SolCli.GetBalance(l.ctx, addr.PublicKey(), rpc.CommitmentFinalized)
+			balance, err := l.svcCtx.SolReadCli.GetBalance(l.ctx, addr.PublicKey(), rpc.CommitmentFinalized)
 			if err != nil {
 				return err
 			}

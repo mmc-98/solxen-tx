@@ -2,6 +2,11 @@
 Name: solxen-tx
 LogConf:
   Encoding: plain
+
+#HttpProxys:
+#  - 199.167.236.12:3128
+#  - 1.1.1.1
+
 Sol:
   HdPAth: m/44'/501'/0'/0'                                      # 钱包地址路径  [wallet derivation path]
   Url: "https://api.mainnet-beta.solana.com"                             # rpc地址 [rpc address]
