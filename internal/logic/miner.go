@@ -40,7 +40,7 @@ func (l *Producer) GetProxyAddr() string {
 	if len(l.svcCtx.Config.HttpProxys) == 0 {
 		return ""
 	}
-	rand.Seed(time.Now().UnixNano())
+	// rand.Seed(time.Now().UnixNano())
 	index := rand.Intn(len(l.svcCtx.Config.HttpProxys))
 	httpProxy := l.svcCtx.Config.HttpProxys[index]
 	// logx.Infof("proxy:%v", fmt.Sprintf("http://%v", httpProxy))

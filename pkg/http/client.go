@@ -59,10 +59,11 @@ func newHTTPTransportWithProxy(proxy *url.URL) *http.Transport {
 			KeepAlive: defaultKeepAlive,
 			DualStack: true,
 		}).DialContext,
-		ForceAttemptHTTP2:     true,
-		MaxIdleConns:          100,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
+		ForceAttemptHTTP2: true,
+		// MaxIdleConns:          100,
+		TLSHandshakeTimeout: 10 * time.Second,
+		// ExpectContinueTimeout: 1 * time.Second,
+		DisableKeepAlives: true,
 	}
 }
 
@@ -77,9 +78,10 @@ func newHTTPTransport() *http.Transport {
 			KeepAlive: defaultKeepAlive,
 			DualStack: true,
 		}).DialContext,
-		ForceAttemptHTTP2:     true,
-		MaxIdleConns:          100,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
+		ForceAttemptHTTP2: true,
+		// MaxIdleConns:        100,
+		TLSHandshakeTimeout: 10 * time.Second,
+		// ExpectContinueTimeout: 1 * time.Second,
+		DisableKeepAlives: true,
 	}
 }
