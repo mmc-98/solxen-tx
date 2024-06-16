@@ -63,7 +63,6 @@ func newHTTPTransportWithProxy(proxy *url.URL) *http.Transport {
 		// MaxIdleConns:          100,
 		TLSHandshakeTimeout: 10 * time.Second,
 		// ExpectContinueTimeout: 1 * time.Second,
-		DisableKeepAlives: true,
 	}
 }
 

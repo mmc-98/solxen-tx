@@ -235,6 +235,7 @@ func (l *Producer) Miner() error {
 					})
 					_ = signature
 					if err != nil {
+						time.Sleep(1 * time.Second)
 						return errorx.Wrap(err, "sig")
 					}
 
